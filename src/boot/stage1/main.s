@@ -1,7 +1,7 @@
 [org 0x7c00]
 [bits 16]
 
-STAGE2_OFFSET equ 0x1000
+STAGE2_OFFSET equ 0x8000
 
 jmp short start
 nop
@@ -249,16 +249,16 @@ get_cursor32:
     push eax
     push edx
     mov ebx, 0
-    mov dx, 0x3D4
-    mov al, 0x0F
+    mov dx, 0x3d4
+    mov al, 0x0f
     out dx, al
-    mov dx, 0x3D5
+    mov dx, 0x3d5
     in al, dx
     mov bl, al
-    mov dx, 0x3D4
-    mov al, 0x0E
+    mov dx, 0x3d4
+    mov al, 0x0e
     out dx, al
-    mov dx, 0x3D5
+    mov dx, 0x3d5
     in al, dx
     mov bh, al
     shl ebx, 1

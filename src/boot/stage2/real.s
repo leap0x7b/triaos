@@ -1,3 +1,5 @@
+section .text
+
 global rm_int
 rm_int:
     mov al, byte [esp+4]
