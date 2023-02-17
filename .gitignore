@@ -2,3 +2,4 @@ build/
 *.elf
 *.trx
 *.o
+compile_commands.json
