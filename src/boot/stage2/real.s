@@ -1,5 +1,4 @@
-; Adapted from Limine
-; https://github.com/limine-bootloader/limine/blob/trunk/common/lib/real.s2.asm_bios_ia32
+; Adapted from Limine (https://github.com/limine-bootloader/limine/blob/trunk/common/lib/real.s2.asm_bios_ia32)
 ; Originally licensed under BSD-2-Clause
 
 global real_int
@@ -35,9 +34,9 @@ real_int:
     mov eax, cr0
     and al, 0xfe
     mov cr0, eax
-    jmp 0x00:.cszero
+    jmp 0:.cs_zero
 
-.cszero:
+.cs_zero:
     xor ax, ax
     mov ss, ax
 
@@ -61,14 +60,12 @@ real_int:
 
     db 0xcd
 
-.int_num:
-    db 0
-
+.int_num: db 0
     cli
 
     mov dword [ss:.esp], esp
     mov esp, dword [ss:.out_regs]
-    lea esp, [esp + 10 * 4]
+    lea esp, [esp + 0x28]
     push eax
     push ebx
     push ecx

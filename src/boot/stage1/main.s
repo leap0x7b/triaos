@@ -99,29 +99,34 @@ print:
 
 print_hex:
     pusha
-    mov cx, 0
+    mov cx, 4
 
 .loop:
-    cmp cx, 4
-    je .end
-    
+    dec cx
+
     mov ax, dx
+    shr dx, 4
     and ax, 0x0f
-    add al, 0x30
-    cmp al, 0x39
-    jle .step2
-    add al, 7
+
+    mov bx, HEX_OUT
+    add bx, cx
+
+    cmp ax, 0x0a
+    jl .step2
+
+    add al, 0x27
+    jl .step2
 
 .step2:
-    mov bx, HEX_OUT + 3
-    sub bx, cx
-    mov [bx], al
-    ror dx, 4
+    add al, 0x30
+    mov byte [bx], al
 
-    add cx, 1
+    cmp cx, 0
+    je .done
+
     jmp .loop
 
-.end:
+.done:
     mov bx, HEX_OUT
     call print
 

@@ -1,3 +1,6 @@
+// Adapted from Limine (https://github.com/limine-bootloader/limine/blob/trunk/common/lib/real.s2.asm_bios_ia32)
+// Originally licensed under BSD-2-Clause
+
 #pragma once
 #include <stdint.h>
 
@@ -26,4 +29,4 @@ typedef struct real_regs {
     uint32_t eax;
 } __attribute__((packed)) real_regs_t;
 
-void real_int(uint8_t int_no, real_regs_t *out_regs, real_regs_t *in_regs);
+void __attribute__((cdecl)) real_int(uint8_t int_num, real_regs_t *out_regs, real_regs_t *in_regs);
