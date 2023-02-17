@@ -1,14 +1,12 @@
-section .text
-
 global rm_int
 rm_int:
-    mov al, byte [esp+4]
+    mov al, byte [esp + 4]
     mov byte [.int_num], al
 
-    mov eax, dword [esp+8]
+    mov eax, dword [esp + 8]
     mov dword [.out_regs], eax
 
-    mov eax, dword [esp+12]
+    mov eax, dword [esp + 12]
     mov dword [.in_regs], eax
 
     sgdt [.gdt]
@@ -66,7 +64,7 @@ rm_int:
 
     mov dword [ss:.esp], esp
     mov esp, dword [ss:.out_regs]
-    lea esp, [esp + 10*4]
+    lea esp, [esp + 10 * 4]
     push eax
     push ebx
     push ecx

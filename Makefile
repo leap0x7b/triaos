@@ -42,7 +42,6 @@ LDHARDFLAGS := \
 	--no-dynamic-linker
 
 TRIABOOT := $(BUILDDIR)/triaboot.bin
-TRIABOOT_STAGE1 := $(BUILDDIR)/boot/stage1.bin
 TRIABOOT_STAGE2 := $(BUILDDIR)/boot/stage2.bin
 TRIABOOT_STAGE2_TRX := $(BUILDDIR)/boot/stage2.trx
 LIB := $(BUILDDIR)/libtria.a
@@ -74,12 +73,7 @@ all: triaboot kernel
 triaboot: $(TRIABOOT)
 kernel: $(KERNEL)
 
-$(TRIABOOT): $(TRIABOOT_STAGE1) $(TRIABOOT_STAGE2)
-	@$(MKCWD)
-	@echo -e "[CAT]\t\t$(TRIABOOT_STAGE1:$(BUILDDIR)/%=%) $(TRIABOOT_STAGE2:$(BUILDDIR)/%=%) > $(@:$(BUILDDIR)/%=%)"
-	@cat $(TRIABOOT_STAGE1) $(TRIABOOT_STAGE2) > $@
-
-$(TRIABOOT_STAGE1): $(SRCDIR)/boot/stage1/main.s
+$(TRIABOOT): $(SRCDIR)/boot/stage1/main.s $(TRIABOOT_STAGE2)
 	@$(MKCWD)
 	@echo -e "[AS]\t\t$(<:$(SRCDIR)/%=%)"
 	@$(AS) -fbin -MD -MP $< -o $@

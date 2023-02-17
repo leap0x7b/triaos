@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <lib/e9.h>
 #include <boot/e820.h>
 #include <boot/real.h>
 

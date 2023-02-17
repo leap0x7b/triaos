@@ -1,8 +1,6 @@
 [org 0x7c00]
 [bits 16]
 
-STAGE2_OFFSET equ 0x8000
-
 jmp short start
 nop
 
@@ -62,8 +60,13 @@ bpb:
 %endif
 
 start:
-    mov [BOOT_DRIVE], dl
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov sp, 0x7c00
 
+    mov [BOOT_DRIVE], dl
     mov bp, 0x9000
     mov sp, bp
 
@@ -81,7 +84,7 @@ print:
 
 .loop:
     mov al, [bx]
-    cmp al, 0 
+    cmp al, 0
     je .done
 
     mov ah, 0x0e
@@ -96,7 +99,6 @@ print:
 
 print_hex:
     pusha
-
     mov cx, 0
 
 .loop:
@@ -104,7 +106,7 @@ print_hex:
     je .end
     
     mov ax, dx
-    and ax, 0x000f
+    and ax, 0x0f
     add al, 0x30
     cmp al, 0x39
     jle .step2
@@ -126,11 +128,11 @@ print_hex:
     popa
     ret
 
-HEX_OUT db '0000', 0
+HEX_OUT db "0000", 0
 
 error:
-    mov dh, ah
-    call print_hex
+    ;mov dh, ah
+    ;call print_hex
     jmp .loop
 
 .loop:
@@ -152,7 +154,7 @@ check_a20:
     ret
 
 enable_a20:
-    mov ax, 0x2401
+    mov ax, 0x2401 ; L is real
     int 0x15
     jnz .done
 
@@ -162,8 +164,8 @@ enable_a20:
     ret
 
 load_stage2:
-    mov bx, STAGE2_OFFSET
-    mov dh, 2
+    mov bx, stage2.offset
+    mov dh, (stage2.size / 512) + 1
     mov dl, [BOOT_DRIVE]
     call disk_load
     ret
@@ -175,8 +177,8 @@ disk_load:
     mov ah, 0x02
     mov al, dh
     mov cl, 0x02
-    mov ch, 0x00
-    mov dh, 0x00
+    mov ch, 0
+    mov dh, 0
 
     int 0x13
     jc error
@@ -189,23 +191,23 @@ disk_load:
     ret
 
 gdt:
-    dq 0x0
+    dq 0
 
 .code:
     dw 0xffff
-    dw 0x0
-    db 0x0
+    dw 0
+    db 0
     db 10011010b
     db 11001111b
-    db 0x0
+    db 0
 
 .data:
     dw 0xffff
-    dw 0x0       ; segment base, bits 0-15
-    db 0x0       ; segment base, bits 16-23
-    db 10010010b ; flags (8 bits)
-    db 11001111b ; flags (4 bits) + segment length, bits 16-19
-    db 0x0       ; segment base, bits 24-31
+    dw 0
+    db 0
+    db 10010010b
+    db 11001111b
+    db 0
 
 .end:
 
@@ -213,25 +215,24 @@ gdt:
     dw gdt.end - gdt - 1
     dd gdt
 
-CODE_SEG equ gdt.code - gdt
-DATA_SEG equ gdt.data - gdt
-
 protected_mode_switch:
-    cli
     lgdt [gdt.descriptor]
+    cli
+
     mov eax, cr0
-    or eax, 0x1
+    or eax, 0x01
     mov cr0, eax
-    jmp CODE_SEG:.init
+
+    jmp 0x08:.init
 
 [bits 32]
 .init:
-    mov ax, DATA_SEG
+    mov eax, 0x10
     mov ds, ax
-    mov ss, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
+    mov ss, ax
 
     mov ebp, 0x90000
     mov esp, ebp
@@ -242,26 +243,30 @@ protected_mode_switch:
     call .start
 
 .start:
-    call STAGE2_OFFSET
+    call stage2.offset
     jmp $
 
 get_cursor32:
     push eax
     push edx
+
     mov ebx, 0
     mov dx, 0x3d4
     mov al, 0x0f
     out dx, al
     mov dx, 0x3d5
     in al, dx
+
     mov bl, al
     mov dx, 0x3d4
     mov al, 0x0e
     out dx, al
     mov dx, 0x3d5
     in al, dx
+
     mov bh, al
     shl ebx, 1
+
     pop edx
     pop eax
     ret
@@ -269,19 +274,22 @@ get_cursor32:
 set_cursor32:
     push eax
     push edx
-    shr bx, 1
+
+    shr bx, 0x01
     mov dx, 0x3d4
     mov al, 0x0f
     out dx, al
     mov dx, 0x3d5
     mov al, bl
     out dx, al
+
     mov dx, 0x3d4
     mov al, 0x0e
     out dx, al
     mov dx, 0x3d5
     mov al, bh
     out dx, al
+
     pop edx
     pop eax
     ret
@@ -317,7 +325,11 @@ print32:
 
 BOOT_DRIVE db 0
 TRIABOOT_PART1_MSG: db "tr", 0
-TRIABOOT_PART2_MSG: db "ia", 0
+TRIABOOT_PART2_MSG: db "ia"
 
 times 510 - ($-$$) db 0
 dw 0xaa55
+
+stage2: incbin "build/boot/stage2.bin"
+.offset equ 0x8000
+.size equ $ - stage2
