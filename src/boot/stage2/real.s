@@ -1,5 +1,9 @@
-global rm_int
-rm_int:
+; Adapted from Limine
+; https://github.com/limine-bootloader/limine/blob/trunk/common/lib/real.s2.asm_bios_ia32
+; Originally licensed under BSD-2-Clause
+
+global real_int
+real_int:
     mov al, byte [esp + 4]
     mov byte [.int_num], al
 

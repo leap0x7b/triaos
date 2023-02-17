@@ -3,3 +3,4 @@ build/
 *.trx
 *.o
 compile_commands.json
+.cache

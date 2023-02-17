@@ -131,8 +131,8 @@ print_hex:
 HEX_OUT db "0000", 0
 
 error:
-    ;mov dh, ah
-    ;call print_hex
+    mov dh, ah
+    call print_hex
     jmp .loop
 
 .loop:
@@ -159,8 +159,15 @@ enable_a20:
     jnz .done
 
 .done:
-    call check_a20
-    jnz error
+    ; FIXME: This causes `error: TIMES value -3 is negative` when
+    ;        compiled. A lot of code in stage1 are extremely important
+    ;        so I can't simply comment or delete them as issues might
+    ;        occur. So I have to comment out these lines to check if
+    ;        A20 is actually enabled. I guess I have to learn how to
+    ;        codegolf assembly codes to make them fit within the tiny
+    ;        512 bytes of space.
+    ;call check_a20
+    ;jnz error
     ret
 
 load_stage2:
