@@ -11,7 +11,7 @@ bpb:
     .bytes_per_sector dw 512
     .sectors_per_cluster db 1
     .reserved_sectors dw 1
-    .fat_count db 0x02
+    .fat_count db 2
     .root_dir_entries dw 0xe0
     .sector_count dw 2880
     .media_descriptor db 0xf0
@@ -24,7 +24,7 @@ bpb:
     .drive_number db 0
     .reserved db 0
     .boot_signature db 0x29
-    .serial_number dd 0x761a0500 ; triaOS spelled in hexadecimal
+    .serial_number dd 0x761a05 ; triaOS spelled in hexadecimal
     .volume_label db 'triaOS 0.1 '
     .file_system db 'FAT16   '
 %else
@@ -33,7 +33,7 @@ bpb:
     .bytes_per_sector dw 512
     .sectors_per_cluster db 1
     .reserved_sectors dw 32
-    .fat_count db 0x02
+    .fat_count db 2
     .root_dir_entries dw 0
     .sector_count dw 0
     .media_descriptor db 0xf8
@@ -46,7 +46,7 @@ bpb:
     .sectors_per_fat32 dd 0
     .flags dw 0
     .fat_version_number dw 0
-    .root_dir_cluster dd 0x02
+    .root_dir_cluster dd 2
     .fsinfo_sector dw 0
     .backup_boot_sector dw 0
     .reserved0 times 12 db 0
@@ -73,7 +73,9 @@ start:
     mov bx, TRIABOOT_PART1_MSG
     call print
 
-    call enable_a20
+    call check_a20
+    jnz enable_a20
+
     call load_stage2
     call protected_mode_switch
 
@@ -161,18 +163,7 @@ check_a20:
 enable_a20:
     mov ax, 0x2401 ; L is real
     int 0x15
-    jnz .done
-
-.done:
-    ; FIXME: This causes `error: TIMES value -3 is negative` when
-    ;        compiled. A lot of code in stage1 are extremely important
-    ;        so I can't simply comment or delete them as issues might
-    ;        occur. So I have to comment out these lines to check if
-    ;        A20 is actually enabled. I guess I have to learn how to
-    ;        codegolf assembly codes to make them fit within the tiny
-    ;        512 bytes of space.
-    ;call check_a20
-    ;jnz error
+    jz error
     ret
 
 load_stage2:
@@ -309,7 +300,7 @@ set_cursor32:
 print32:
     pusha
 
-    mov ebx, 0
+    xor ebx, ebx
     mov edx, 0xb8000
     call get_cursor32
 
@@ -337,7 +328,7 @@ print32:
 
 BOOT_DRIVE db 0
 TRIABOOT_PART1_MSG: db "tr", 0
-TRIABOOT_PART2_MSG: db "ia"
+TRIABOOT_PART2_MSG: db "ia", 0
 
 times 510 - ($-$$) db 0
 dw 0xaa55

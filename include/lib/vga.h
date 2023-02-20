@@ -1,4 +1,6 @@
-#pragma once
+#ifndef VGA_H
+#define VGA_H
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -34,3 +36,5 @@ void vga_set_cursor(size_t offset);
 size_t vga_get_cursor(void);
 void vga_write_char(char c);
 void vga_write(const char *string);
+
+#endif

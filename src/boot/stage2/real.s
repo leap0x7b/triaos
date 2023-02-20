@@ -13,8 +13,6 @@ real_int:
     mov dword [.in_regs], eax
 
     sgdt [.gdt]
-    sidt [.idt]
-    lidt [.real_idt]
 
     push ebx
     push esi
@@ -80,8 +78,7 @@ real_int:
     push gs
     mov esp, dword [ss:.esp]
 
-    o32 lgdt [ss:.gdt]
-    o32 lidt [ss:.idt]
+    lgdt [ss:.gdt]
 
     mov eax, cr0
     or al, 1
@@ -109,7 +106,3 @@ align 16
 .out_regs dd 0
 .in_regs dd 0
 .gdt dq 0
-.idt dq 0
-.real_idt:
-    dw 0x3ff
-    dd 0

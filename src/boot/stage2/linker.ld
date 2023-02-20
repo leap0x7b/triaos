@@ -16,8 +16,10 @@ SECTIONS {
     }
 
     .bss : {
+        bss_begin = .;
         *(COMMON)
-        *(.bss)
+        *(.bss*)
+        bss_end = .;
     }
 
     /DISCARD/ : {

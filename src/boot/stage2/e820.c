@@ -3,15 +3,13 @@
 #include <boot/e820.h>
 #include <boot/real.h>
 
-#define MAX_ENTRIES 256
-
-memmap_entry_t e820_map[MAX_ENTRIES];
+memmap_entry_t *e820_map[E820_MAX_ENTRIES];
 size_t e820_entries = 0;
 
 void e820_init(void) {
     real_regs_t regs = {0};
 
-    for (size_t i = 0; i < MAX_ENTRIES; i++) {
+    for (size_t i = 0; i < E820_MAX_ENTRIES; i++) {
         memmap_entry_t entry;
 
         regs.eax = 0xe820;
@@ -19,17 +17,19 @@ void e820_init(void) {
         regs.edx = 0x534d4150;
         regs.edi = (uint32_t)&entry;
         real_int(0x15, &regs, &regs);
+        e9_write("a");
 
         if (regs.eflags & EFLAGS_CF) {
             e820_entries = i;
             return;
         }
 
-        e820_map[i] = entry;
+        e820_map[i] = &entry;
 
         if (!regs.ebx) {
             e820_entries = ++i;
             return;
         }
     }
+    e9_write("b");
 }

@@ -1,4 +1,6 @@
-#pragma once
+#ifndef BOOT_INFO_H
+#define BOOT_INFO_H
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -19,7 +21,7 @@ typedef struct memmap_entry {
 
 typedef struct memmap {
     size_t entry_count;
-    memmap_entry_t entries[0];
+    memmap_entry_t **entries;
 } memmap_t;
 
 typedef enum framebuffer_memory_model {
@@ -47,3 +49,5 @@ typedef struct boot_info {
     memmap_t memmap;
     framebuffer_t framebuffer;
 } boot_info_t;
+
+#endif
