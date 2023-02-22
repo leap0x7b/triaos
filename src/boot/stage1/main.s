@@ -66,7 +66,6 @@ start:
     mov ss, ax
     mov sp, 0x7c00
 
-    mov [BOOT_DRIVE], dl
     mov bp, 0x9000
     mov sp, bp
 
@@ -169,7 +168,6 @@ enable_a20:
 load_stage2:
     mov bx, stage2.offset
     mov dh, (stage2.size / 512) + 1
-    mov dl, [BOOT_DRIVE]
     call disk_load
     ret
 
@@ -177,11 +175,11 @@ disk_load:
     pusha
     push dx
 
-    mov ah, 0x02
+    mov ah, 2
     mov al, dh
-    mov cl, 0x02
-    mov ch, 0
-    mov dh, 0
+    mov cl, 2
+    xor ch, ch
+    xor dh, dh
 
     int 0x13
     jc error
@@ -253,7 +251,7 @@ get_cursor32:
     push eax
     push edx
 
-    mov ebx, 0
+    xor ebx, ebx
     mov dx, 0x3d4
     mov al, 0x0f
     out dx, al
@@ -278,7 +276,7 @@ set_cursor32:
     push eax
     push edx
 
-    shr bx, 0x01
+    shr bx, 1
     mov dx, 0x3d4
     mov al, 0x0f
     out dx, al

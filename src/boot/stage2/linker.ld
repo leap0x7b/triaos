@@ -4,6 +4,7 @@ SECTIONS {
     . = 0x8000;
 
     .text : {
+        KEEP(*(.entry*))
         *(.text*)
     }
 
@@ -12,7 +13,7 @@ SECTIONS {
     }
 
     .data : {
-        *(.data)
+        *(.data*)
     }
 
     .bss : {
