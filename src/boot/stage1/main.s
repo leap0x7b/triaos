@@ -213,8 +213,8 @@ gdt:
 .end:
 
 .descriptor:
-    dw gdt.end - gdt - 1
-    dd gdt
+    dw (.end - .code) - 1 + 8
+    dd .code - 8
 
 protected_mode_switch:
     lgdt [gdt.descriptor]
