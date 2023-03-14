@@ -1,7 +1,7 @@
 <h1 align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./assets/logo-white.svg">
-    <img alt="triaOS" src="./assets/logo.svg" width="256px">
+    <img alt="triaOS" src="./assets/logo.svg" width="320px">
   </picture>
 </h1>
 <p align="center">

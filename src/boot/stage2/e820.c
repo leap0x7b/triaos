@@ -17,7 +17,6 @@ void e820_init(void) {
         regs.edx = 0x534d4150;
         regs.edi = (uint32_t)&entry;
         real_int(0x15, &regs, &regs);
-        e9_write("a");
 
         if (regs.eflags & EFLAGS_CF) {
             e820_entries = i;
@@ -31,5 +30,4 @@ void e820_init(void) {
             return;
         }
     }
-    e9_write("b");
 }

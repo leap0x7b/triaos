@@ -1,8 +1,9 @@
 [org 0x7c00]
 [bits 16]
 
-jmp short start
-nop
+_start:
+    jmp short entry
+    nop
 
 ;%define FLOPPY
 %ifdef FLOPPY ; Floppy disks have to be formatted in FAT12/16
@@ -25,7 +26,7 @@ bpb:
     .reserved db 0
     .boot_signature db 0x29
     .serial_number dd 0x761a05 ; triaOS spelled in hexadecimal
-    .volume_label db 'triaOS 0.1 '
+    .volume_label db 'triaOS0.1.0'
     .file_system db 'FAT16   '
 %else
 bpb:
@@ -37,9 +38,9 @@ bpb:
     .root_dir_entries dw 0
     .sector_count dw 0
     .media_descriptor db 0xf8
-    .sectors_per_fat dw 0x09
-    .sectors_per_track dw 0x12
-    .head_count dw 0x02
+    .sectors_per_fat dw 9
+    .sectors_per_track dw 18
+    .head_count dw 2
     .hidden_sectors dd 0
     .large_sector_count dd 0
     ; FAT32 extended BPB
@@ -54,12 +55,12 @@ bpb:
     .drive_number db 0x80
     .reserved1 db 0
     .boot_signature db 0x29
-    .serial_number dd 0x761a0500 ; triaOS spelled in hexadecimal
-    .volume_label db 'triaOS 0.1 '
+    .serial_number dd 0x761a05 ; triaOS spelled in hexadecimal
+    .volume_label db 'triaOS0.1.0'
     .file_system db 'FAT32   '
 %endif
 
-start:
+entry:
     xor ax, ax
     mov ds, ax
     mov es, ax
@@ -139,9 +140,9 @@ HEX_OUT db "0000", 0
 error:
     mov dh, ah
     call print_hex
-    jmp .loop
+    jmp .halt
 
-.loop:
+.halt:
     hlt
     jmp $
 
@@ -213,15 +214,15 @@ gdt:
 .end:
 
 .descriptor:
-    dw (.end - .code) - 1 + 8
-    dd .code - 8
+    dw (.end - gdt) - 1
+    dd gdt
 
 protected_mode_switch:
     lgdt [gdt.descriptor]
     cli
 
     mov eax, cr0
-    or eax, 0x01
+    bts ax, 0
     mov cr0, eax
 
     jmp 0x08:.init
