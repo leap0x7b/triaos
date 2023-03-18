@@ -73,9 +73,6 @@ entry:
     mov bx, TRIABOOT_PART1_MSG
     call print
 
-    call check_a20
-    jnz enable_a20
-
     call load_stage2
     call protected_mode_switch
 
@@ -146,26 +143,6 @@ error:
     hlt
     jmp $
 
-check_a20:
-    push es
-    xor ax, ax
-    dec ax
-    mov es, ax
-    mov ah, byte [es:0x510]
-    mov byte [ds:0x500], 0
-    mov byte [es:0x510], al
-    mov al, byte [ds:0x500]
-    mov byte [es:0x510], ah
-    pop es
-    or al, al
-    ret
-
-enable_a20:
-    mov ax, 0x2401 ; L is real
-    int 0x15
-    jz error
-    ret
-
 load_stage2:
     mov bx, stage2.offset
     mov dh, (stage2.size / 512) + 1
@@ -195,7 +172,23 @@ disk_load:
 gdt:
     dq 0
 
-.code:
+.code16:
+    dw 0xffff
+    dw 0
+    db 0
+    db 10011010b
+    db 1
+    db 0
+
+.data16:
+    dw 0xffff
+    dw 0
+    db 0
+    db 10010010b
+    db 1
+    db 0
+
+.code32:
     dw 0xffff
     dw 0
     db 0
@@ -203,7 +196,7 @@ gdt:
     db 11001111b
     db 0
 
-.data:
+.data32:
     dw 0xffff
     dw 0
     db 0
@@ -225,11 +218,11 @@ protected_mode_switch:
     bts ax, 0
     mov cr0, eax
 
-    jmp 0x08:.init
+    jmp 0x18:.init
 
 [bits 32]
 .init:
-    mov eax, 0x10
+    mov eax, 0x20
     mov ds, ax
     mov es, ax
     mov fs, ax
@@ -325,7 +318,6 @@ print32:
     popa
     ret
 
-BOOT_DRIVE db 0
 TRIABOOT_PART1_MSG: db "tr", 0
 TRIABOOT_PART2_MSG: db "ia", 0
 

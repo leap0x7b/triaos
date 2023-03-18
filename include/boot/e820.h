@@ -1,5 +1,5 @@
-#ifndef E820_H
-#define E820_H
+#ifndef BOOT__E820_H
+#define BOOT__E820_H
 
 #include <stdint.h>
 #include <boot/boot_info.h>

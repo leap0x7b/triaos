@@ -1,8 +1,8 @@
 // Adapted from Limine (https://github.com/limine-bootloader/limine/blob/trunk/common/lib/real.s2.asm_bios_ia32)
 // Originally licensed under BSD-2-Clause
 
-#ifndef REAL_H
-#define REAL_H
+#ifndef BOOT__REAL_H
+#define BOOT__REAL_H
 
 #include <stdint.h>
 

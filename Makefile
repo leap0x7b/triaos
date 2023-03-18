@@ -23,8 +23,8 @@ LD = ld.lld
 OBJCOPY = llvm-objcopy
 QEMU = qemu-system-i386
 
-CFLAGS ?= -Og -gdwarf -pipe
-ASFLAGS ?=
+CFLAGS ?= -Og -gdwarf
+ASFLAGS ?= -g -Fdwarf
 LDFLAGS ?=
 QEMUFLAGS ?= -no-reboot -no-shutdown
 QEMUMEMSIZE ?= 512M
@@ -36,7 +36,7 @@ CHARDFLAGS := \
 	-mcmodel=kernel -MMD -MP \
 	-mno-80387 -mno-mmx -mno-3dnow \
 	-mno-sse -mno-sse2 -msoft-float
-ASHARDFLAGS := -felf32 -g -Fdwarf -MD -MP
+ASHARDFLAGS := -felf32 -MD -MP
 LDHARDFLAGS := \
 	-nostdlib -static \
 	-L$(BUILDDIR) -ltria \
