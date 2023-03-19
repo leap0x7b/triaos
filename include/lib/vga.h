@@ -1,5 +1,5 @@
-#ifndef VGA_H
-#define VGA_H
+#ifndef LIB__VGA_H
+#define LIB__VGA_H
 
 #include <stdint.h>
 #include <stddef.h>

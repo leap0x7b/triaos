@@ -1,5 +1,5 @@
-#ifndef STRING_H
-#define STRING_H
+#ifndef LIB__STRING_H
+#define LIB__STRING_H
 
 #include <stdint.h>
 #include <stddef.h>

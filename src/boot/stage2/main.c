@@ -12,9 +12,9 @@ void entry(void) {
         e9_write("[triaboot-stage2] E820 memory map: ");
         e820_init();
         e9_write("OK\n");
-        //printf_("what");
+        e9_printf("what");
     } else {
         e9_write("[triaboot-stage2] Unable to boot without A20 gate!\n");
-        vga_write("FFC0");
+        vga_write("ffc0");
     }
 }

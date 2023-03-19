@@ -1,5 +1,5 @@
-#ifndef MISC_H
-#define MISC_H
+#ifndef LIB__MISC_H
+#define LIB__MISC_H
 
 #define DIV_ROUNDUP(a, b) ((a + (b - 1)) / b)
 #define ALIGN_UP(x, a) (DIV_ROUNDUP(x, a) * a)

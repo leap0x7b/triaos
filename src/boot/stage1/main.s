@@ -145,7 +145,7 @@ error:
 
 load_stage2:
     mov bx, stage2.offset
-    mov dh, (stage2.size / 512) + 1
+    mov dh, (stage2.size / 512); + 1
     call disk_load
     ret
 

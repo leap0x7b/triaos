@@ -44,6 +44,7 @@ LDHARDFLAGS := \
 	--no-dynamic-linker
 
 TRIABOOT := $(BUILDDIR)/triaboot.bin
+TRIABOOT_IMG := $(BUILDDIR)/triaboot.img
 TRIABOOT_STAGE2 := $(BUILDDIR)/boot/stage2.bin
 TRIABOOT_STAGE2_TRX := $(BUILDDIR)/boot/stage2.trx
 LIB := $(BUILDDIR)/libtria.a
@@ -72,8 +73,14 @@ LIB_ASMDEPS := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(LIB_ASMFILES:.s=.s.d))
 
 all: triaboot kernel
 
-triaboot: $(TRIABOOT)
+triaboot: $(TRIABOOT) $(TRIABOOT_IMG)
 kernel: $(KERNEL)
+
+$(TRIABOOT_IMG): $(TRIABOOT)
+	@$(MKCWD)
+	@echo -e "[TRUNCATE]\t$(@:$(BUILDDIR)/%=%)"
+	$(Q)cp $< $@
+	$(Q)truncate -s 1440000 $@
 
 $(TRIABOOT): $(SRCDIR)/boot/stage1/main.s $(TRIABOOT_STAGE2)
 	@$(MKCWD)
@@ -137,8 +144,8 @@ $(BUILDDIR)/kernel/%.s.o: $(SRCDIR)/kernel/%.s
 	$(Q)$(AS) $(ASHARDFLAGS) -I$(SRCDIR)/kernel $< -o $@
 
 run: all
-	@echo -e "[QEMU]\t\t$(TRIABOOT:$(BUILDDIR)/%=%)"
-	$(Q)$(QEMU) -m $(QEMUMEMSIZE) $(QEMUFLAGS) -hda $(TRIABOOT) -debugcon stdio
+	@echo -e "[QEMU]\t\t$(TRIABOOT_IMG:$(BUILDDIR)/%=%)"
+	$(Q)$(QEMU) -m $(QEMUMEMSIZE) $(QEMUFLAGS) -fda $(TRIABOOT_IMG) -debugcon stdio
 
 clean:
 	$(Q)$(RM)r $(BUILDDIR)
