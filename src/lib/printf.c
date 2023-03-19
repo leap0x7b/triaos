@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <lib/printf.h>
 #include <lib/nanoprintf_config.h>
+#define NANOPRINTF_IMPLEMENTATION
 #include <lib/nanoprintf.h>
 
 int snprintf(char* buffer, size_t count, const char* format, ...) {

@@ -17,7 +17,7 @@ EXTERNALDIR = $(CURDIR)/external
 
 ISO = $(BUILDDIR)/triaos.iso
 
-CC = clang -target i686-pc-elf
+CC = clang -target i386-pc-elf
 AS = nasm
 LD = ld.lld
 OBJCOPY = llvm-objcopy
@@ -40,6 +40,7 @@ ASHARDFLAGS := -felf32 -MD -MP
 LDHARDFLAGS := \
 	-nostdlib -static \
 	-L$(BUILDDIR) -ltria \
+	-L$(SRCDIR) -lcompiler_rt_builtins_i386 \
 	-zmax-page-size=0x1000 \
 	--no-dynamic-linker
 

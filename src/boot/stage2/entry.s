@@ -2,7 +2,7 @@ extern bss_begin
 extern bss_end
 extern entry
 
-section .entry
+section .text.entry
 
 global _start
 _start:
