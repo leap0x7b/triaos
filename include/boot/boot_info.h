@@ -27,6 +27,8 @@ typedef struct memmap {
 typedef enum framebuffer_memory_model {
     MEMORY_MODEL_RGB = 1,
     MEMORY_MODEL_BGR = 2,
+    MEMORY_MODEL_RGBA = 3,
+    MEMORY_MODEL_BGRA = 4,
 } framebuffer_memory_model_t;
 
 typedef struct framebuffer {

@@ -40,19 +40,18 @@ ASHARDFLAGS := -felf32 -MD -MP
 LDHARDFLAGS := \
 	-nostdlib -static \
 	-L$(BUILDDIR) -ltria \
-	-L$(SRCDIR) -lcompiler_rt_builtins_i386 \
+	-L$(SRCDIR) -lcompiler_rt \
 	-zmax-page-size=0x1000 \
 	--no-dynamic-linker
 
 TRIABOOT := $(BUILDDIR)/triaboot.bin
 TRIABOOT_IMG := $(BUILDDIR)/triaboot.img
-TRIABOOT_STAGE2 := $(BUILDDIR)/boot/stage2.bin
-TRIABOOT_STAGE2_TRX := $(BUILDDIR)/boot/stage2.trx
+TRIABOOT_TRX := $(BUILDDIR)/triaboot.trx
 LIB := $(BUILDDIR)/libtria.a
 KERNEL := $(BUILDDIR)/kernel.trx
 
-TRIABOOT_CFILES := $(shell find $(SRCDIR)/boot/stage2 -name *.c)
-TRIABOOT_ASMFILES := $(shell find $(SRCDIR)/boot/stage2 -name *.s)
+TRIABOOT_CFILES := $(shell find $(SRCDIR)/boot -name *.c)
+TRIABOOT_ASMFILES := $(shell find $(SRCDIR)/boot -name *.s)
 TRIABOOT_OBJ := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(TRIABOOT_CFILES:.c=.o))
 TRIABOOT_ASMOBJ := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(TRIABOOT_ASMFILES:.s=.s.o))
 TRIABOOT_DEPS := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(TRIABOOT_CFILES:.c=.d))
@@ -83,32 +82,27 @@ $(TRIABOOT_IMG): $(TRIABOOT)
 	$(Q)cp $< $@
 	$(Q)truncate -s 1440000 $@
 
-$(TRIABOOT): $(SRCDIR)/boot/stage1/main.s $(TRIABOOT_STAGE2)
-	@$(MKCWD)
-	@echo -e "[AS]\t\t$(<:$(SRCDIR)/%=%)"
-	$(Q)$(AS) -fbin -MD -MP $< -o $@
-
-$(TRIABOOT_STAGE2): $(TRIABOOT_STAGE2_TRX)
+$(TRIABOOT): $(TRIABOOT_TRX)
 	@$(MKCWD)
 	@echo -e "[OBJCOPY]\t$(@:$(BUILDDIR)/%=%)"
 	$(Q)$(OBJCOPY) -Obinary $< $@
 
-$(TRIABOOT_STAGE2_TRX): $(TRIABOOT_OBJ) $(TRIABOOT_ASMOBJ) $(LIB)
+$(TRIABOOT_TRX): $(TRIABOOT_OBJ) $(TRIABOOT_ASMOBJ) $(LIB)
 	@$(MKCWD)
 	@echo -e "[LD]\t\t$(@:$(BUILDDIR)/%=%)"
-	$(Q)$(LD) $(TRIABOOT_OBJ) $(TRIABOOT_ASMOBJ) $(LDFLAGS) $(LDHARDFLAGS) -T$(SRCDIR)/boot/stage2/linker.ld -o $@
+	$(Q)$(LD) $(TRIABOOT_OBJ) $(TRIABOOT_ASMOBJ) $(LDFLAGS) $(LDHARDFLAGS) -T$(SRCDIR)/boot/linker.ld -o $@
 
 -include $(TRIABOOT_DEPS) $(TRIABOOT_ASMDEPS)
 
-$(BUILDDIR)/boot/stage2/%.o: $(SRCDIR)/boot/stage2/%.c
+$(BUILDDIR)/boot/%.o: $(SRCDIR)/boot/%.c
 	@$(MKCWD)
 	@echo -e "[CC]\t\t$(<:$(SRCDIR)/%=%)"
 	$(Q)$(CC) $(CFLAGS) $(CHARDFLAGS) -c $< -o $@
 
-$(BUILDDIR)/boot/stage2/%.s.o: $(SRCDIR)/boot/stage2/%.s
+$(BUILDDIR)/boot/%.s.o: $(SRCDIR)/boot/%.s
 	@$(MKCWD)
 	@echo -e "[AS]\t\t$(<:$(SRCDIR)/%=%)"
-	$(Q)$(AS) $(ASHARDFLAGS) -I$(SRCDIR)/boot/stage2 $< -o $@
+	$(Q)$(AS) $(ASHARDFLAGS) -I$(SRCDIR)/boot $< -o $@
 
 $(LIB): $(LIB_OBJ) $(LIB_ASMOBJ)
 	@$(MKCWD)
@@ -146,7 +140,7 @@ $(BUILDDIR)/kernel/%.s.o: $(SRCDIR)/kernel/%.s
 
 run: all
 	@echo -e "[QEMU]\t\t$(TRIABOOT_IMG:$(BUILDDIR)/%=%)"
-	$(Q)$(QEMU) -m $(QEMUMEMSIZE) $(QEMUFLAGS) -fda $(TRIABOOT_IMG) -debugcon stdio
+	$(Q)$(QEMU) -m $(QEMUMEMSIZE) $(QEMUFLAGS) -hda $(TRIABOOT_IMG) -debugcon stdio
 
 clean:
 	$(Q)$(RM)r $(BUILDDIR)

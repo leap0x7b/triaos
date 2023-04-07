@@ -1,6 +1,12 @@
-[org 0x7c00]
-[bits 16]
+section .stage1
 
+global _start
+extern stage2_begin
+extern stage2_sector_size
+extern stack_end
+extern stage2_entry
+
+bits 16
 _start:
     jmp short entry
     nop
@@ -67,11 +73,11 @@ entry:
     mov ss, ax
     mov sp, 0x7c00
 
-    mov bp, 0x9000
-    mov sp, bp
-
     mov bx, TRIABOOT_PART1_MSG
     call print
+
+    call check_a20
+    jnz enable_a20
 
     call load_stage2
     call protected_mode_switch
@@ -143,9 +149,67 @@ error:
     hlt
     jmp $
 
+check_a20:
+    push es
+    xor ax, ax
+    dec ax
+    mov es, ax
+    mov ah, byte [es:0x510]
+    mov byte [ds:0x500], 0
+    mov byte [es:0x510], al
+    mov al, byte [ds:0x500]
+    mov byte [es:0x510], ah
+    pop es
+    or al, al
+    ret
+
+enable_a20:
+    ; BIOS method
+    mov ax, 0x2401 ; L is real
+    int 0x15
+    jz error
+    call check_a20
+    jnz error
+    ; Keyboard method
+    call .kbd_wait
+    mov al, 0xad
+    out 0x64, al
+    call .kbd_wait
+    mov al, 0xd0
+    out 0x64, al
+    call .kbd_wait2
+    in al, 0x60
+    push ax
+    call .kbd_wait
+    mov al, 0xd1
+    out 0x64, al
+    call .kbd_wait
+    pop ax
+    or al, 2
+    out 0x60, al
+    call .kbd_wait
+    mov al, 0xae
+    out 0x64, al
+    call .kbd_wait
+    call check_a20
+    jnz error
+    ret
+
+.kbd_wait:
+    in al, 0x64
+    test al, 2
+    jnz .kbd_wait
+    ret
+
+.kbd_wait2:
+    in al, 0x64
+    test al, 1
+    jz .kbd_wait2
+    ret
+
 load_stage2:
-    mov bx, stage2.offset
-    mov dh, (stage2.size / 512); + 1
+    mov bx, stage2_begin
+    mov dh, stage2_sector_size
     call disk_load
     ret
 
@@ -218,112 +282,6 @@ protected_mode_switch:
     bts ax, 0
     mov cr0, eax
 
-    jmp 0x18:.init
-
-[bits 32]
-.init:
-    mov eax, 0x20
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ss, ax
-
-    mov ebp, 0x90000
-    mov esp, ebp
-
-    mov esi, TRIABOOT_PART2_MSG
-    call print32
-
-    call .start
-
-.start:
-    call stage2.offset
-    jmp $
-
-get_cursor32:
-    push eax
-    push edx
-
-    xor ebx, ebx
-    mov dx, 0x3d4
-    mov al, 0x0f
-    out dx, al
-    mov dx, 0x3d5
-    in al, dx
-
-    mov bl, al
-    mov dx, 0x3d4
-    mov al, 0x0e
-    out dx, al
-    mov dx, 0x3d5
-    in al, dx
-
-    mov bh, al
-    shl ebx, 1
-
-    pop edx
-    pop eax
-    ret
-
-set_cursor32:
-    push eax
-    push edx
-
-    shr bx, 1
-    mov dx, 0x3d4
-    mov al, 0x0f
-    out dx, al
-    mov dx, 0x3d5
-    mov al, bl
-    out dx, al
-
-    mov dx, 0x3d4
-    mov al, 0x0e
-    out dx, al
-    mov dx, 0x3d5
-    mov al, bh
-    out dx, al
-
-    pop edx
-    pop eax
-    ret
-
-print32:
-    pusha
-
-    xor ebx, ebx
-    mov edx, 0xb8000
-    call get_cursor32
-
-    add edx, ebx
-
-.loop:
-    lodsb
-
-    mov ebx, edx
-    sub ebx, 0xb8000
-    call set_cursor32
-    
-    cmp al, 0
-    je .done
-    
-    mov ah, 0x07
-    mov [edx], ax
-    add edx, 2
-    
-    jmp .loop
-
-.done:
-    popa
-    ret
+    jmp 0x18:stage2_entry
 
 TRIABOOT_PART1_MSG: db "tr", 0
-TRIABOOT_PART2_MSG: db "ia", 0
-
-times 510 - ($-$$) db 0
-dw 0xaa55
-
-stage2: incbin "build/boot/stage2.bin"
-.offset equ 0x8000
-.size equ $ - stage2
