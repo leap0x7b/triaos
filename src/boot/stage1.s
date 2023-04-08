@@ -17,7 +17,7 @@ bpb:
     .oem_name db 'triaOS  '
     .bytes_per_sector dw 512
     .sectors_per_cluster db 1
-    .reserved_sectors dw 1
+    .reserved_sectors dw 40
     .fat_count db 2
     .root_dir_entries dw 0xe0
     .sector_count dw 2880

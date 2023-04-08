@@ -6,8 +6,8 @@
 
 #include <stdint.h>
 
-#define real_seg(x) ((uint16_t)(((int)x & 0xffff0) >> 4))
-#define real_off(x) ((uint16_t)(((int)x & 0x0000f) >> 0))
+#define real_segment(x) ((uint16_t)(((int)x & 0xffff0) >> 4))
+#define real_offset(x) ((uint16_t)(((int)x & 0x0000f) >> 0))
 
 #define real_desegment(seg, off) (((uint32_t)(seg) << 4) + (uint32_t)(off))
 

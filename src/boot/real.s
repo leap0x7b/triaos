@@ -21,7 +21,7 @@ real_int:
 
     jmp 0x08:.bits16
 
-[bits 16]
+bits 16
 .bits16:
     mov ax, 0x10
     mov ds, ax
@@ -85,7 +85,7 @@ real_int:
     mov cr0, eax
     jmp 0x18:.bits32
 
-[bits 32]
+bits 32
 .bits32:
     mov ax, 0x20
     mov ds, ax
