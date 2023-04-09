@@ -6,6 +6,7 @@
 #include <lib/string.h>
 #include <lib/misc.h>
 #include <lib/e9.h>
+#include <lib/vga.h>
 
 #define BLOCK_SIZE_IN_SECTORS 16
 #define BLOCK_SIZE (sector_size * BLOCK_SIZE_IN_SECTORS)
@@ -34,15 +35,12 @@ static int cache_block(int drive, uint64_t block, int sector_size) {
 
     if (!dap) {
         dap = mem_alloc(sizeof(dap_t));
-        dap->size  = 16;
+        dap->size = 16;
         dap->count = BLOCK_SIZE_IN_SECTORS;
     }
 
     if (!cache)
         cache = mem_alloc_aligned(MAX_CACHE, 16);
-
-    /*if (BLOCK_SIZE > MAX_CACHE)
-        panic("Disk cache overflow");*/
 
     dap->segment = real_segment(cache);
     dap->offset = real_offset(cache);
@@ -57,8 +55,12 @@ static int cache_block(int drive, uint64_t block, int sector_size) {
     real_int(0x13, &regs, &regs);
 
     if (regs.eflags & EFLAGS_CF) {
-        /*int ah = (real.eax >> 8) & 0xff;
-        panic("Disk error %x. Drive %x, LBA %x.", ah, drive, dap->lba);*/
+        int ah = (regs.eax >> 8) & 0xff;
+        e9_printf("[triaboot-stage1] Disk read error: 0x%.4x (drive number %d)\n", ah, drive);
+        vga_printf("!%.4X", ah);
+        while (1)
+            __asm__ volatile ("hlt");
+        __builtin_unreachable();
     }
 
     cached_block = block;
@@ -81,8 +83,12 @@ int disk_get_sector_size(int drive) {
     real_int(0x13, &regs, &regs);
 
     if (regs.eflags & EFLAGS_CF) {
-        /*int ah = (r.eax >> 8) & 0xff;
-        panic("Disk error %x. Drive %x.", ah, drive);*/
+        int ah = (regs.eax >> 8) & 0xff;
+        e9_printf("[triaboot-stage1] Disk read error: 0x%.4x (drive number %d)\n", ah, drive);
+        vga_printf("!%.4X", ah);
+        while (1)
+            __asm__ volatile ("hlt");
+        __builtin_unreachable();
     }
 
     return drive_params.bytes_per_sector;

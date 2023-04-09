@@ -2,6 +2,8 @@
 #include <lib/string.h>
 #include <lib/io.h>
 #include <lib/vga.h>
+#include <lib/nanoprintf_config.h>
+#include <lib/nanoprintf.h>
  
 #define VGA_COLUMNS 80
 #define VGA_ROWS 25
@@ -75,11 +77,23 @@ void vga_write_char(char c) {
 }
 
 void vga_write(const char *string) {
-    // FIXME: this code crashes on triaboot stage2 for some reason,
-    //        it would simply just triple fault if you use this instead
-    //        of printing individual characters with vga_write_char()
-    //        but since we're just printing 'bo' and 'ot' as a part of
-    //        triaboot's 4-part stage, it doesn't matter.
     for (size_t i = 0; i < strlen(string); i++)
         vga_write_char(string[i]);
+}
+
+static void _printf_callback(int c, void *_) {
+    (void)_;
+    vga_write_char(c);
+}
+
+int vga_printf(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    int ret = npf_vpprintf(&_printf_callback, NULL, format, args);
+    va_end(args);
+    return ret;
+}
+
+int vga_vprintf(const char *format, va_list args) {
+    return npf_vpprintf(&_printf_callback, NULL, format, args);
 }

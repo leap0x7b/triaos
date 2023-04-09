@@ -3,8 +3,9 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdarg.h>
 
-enum vga_color {
+typedef enum vga_color {
     VGA_COLOR_BLACK = 0,
     VGA_COLOR_BLUE = 1,
     VGA_COLOR_GREEN = 2,
@@ -21,20 +22,17 @@ enum vga_color {
     VGA_COLOR_LIGHT_MAGENTA = 13,
     VGA_COLOR_LIGHT_BROWN = 14,
     VGA_COLOR_WHITE = 15,
-};
+} vga_color_t;
 
-static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) {
-    return fg | bg << 4;
-}
+#define vga_entry_color(fg, bg) ((vga_color_t)fg | (vga_color_t)bg << 4)
+#define vga_entry(c, color) ((char)c | (uint8_t)color << 8)
  
-static inline uint16_t vga_entry(char c, uint8_t color) {
-    return c | color << 8;
-}
-
 void vga_init(void);
 void vga_set_cursor(size_t offset);
 size_t vga_get_cursor(void);
 void vga_write_char(char c);
 void vga_write(const char *string);
+int vga_printf(const char *format, ...);
+int vga_vprintf(const char *format, va_list args);
 
 #endif

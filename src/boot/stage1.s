@@ -73,7 +73,7 @@ entry:
     mov ss, ax
     mov sp, 0x7c00
 
-    mov bx, TRIABOOT_PART1_MSG
+    mov si, TRIABOOT_PART1_MSG
     call print
 
     call check_a20
@@ -85,21 +85,16 @@ entry:
     jmp $
 
 print:
-    pusha
+    mov ah, 0x0e
 
 .loop:
-    mov al, [bx]
+    lodsb
     cmp al, 0
     je .done
-
-    mov ah, 0x0e
     int 0x10
-
-    add bx, 1
     jmp .loop
 
 .done:
-    popa
     ret
 
 print_hex:
@@ -119,7 +114,7 @@ print_hex:
     cmp ax, 0x0a
     jl .step2
 
-    add al, 0x27
+    add al, 7
     jl .step2
 
 .step2:
@@ -132,7 +127,7 @@ print_hex:
     jmp .loop
 
 .done:
-    mov bx, HEX_OUT
+    mov si, HEX_OUT
     call print
 
     popa
@@ -142,6 +137,10 @@ HEX_OUT db "0000", 0
 
 error:
     mov dh, ah
+    mov al, '!'
+    mov ah, 0x0e
+    int 0x10
+
     call print_hex
     jmp .halt
 

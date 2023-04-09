@@ -11,12 +11,11 @@
 #include <lib/fatfs/diskio.h>		/* Declarations of disk functions */
 
 #include <boot/disk.h>
+#include <lib/e9.h>
 
 /* Definitions of physical drive number for each drive */
 #define DEV_FLOPPY 0
 #define DEV_HDD 1
-
-//extern uint8_t temporary_sector_buffer[SECTOR_SIZE];
 
 /*-----------------------------------------------------------------------*/
 /* Get Drive Status                                                      */
@@ -81,7 +80,8 @@ DRESULT disk_read (
         if (!buff)
             return RES_PARERR;
 
-        disk_read(0, buff, sector * 512, count * 512);
+        e9_printf("buf addr: 0x%x, sector: %d, count: %d\n", buff, sector, count);
+        disk_read_bytes(0, buff, sector, count * disk_get_sector_size(0));
 
         return RES_OK;
 
@@ -89,7 +89,8 @@ DRESULT disk_read (
         if (!buff)
             return RES_PARERR;
 
-        disk_read(0x80, buff, sector * 512, count * 512);
+        e9_printf("buf addr: 0x%x, sector: %d, count: %d\n", buff, sector, count);
+        disk_read_bytes(0, buff, sector, count * disk_get_sector_size(0x80));
 
         return RES_OK;
     }
@@ -145,9 +146,20 @@ DRESULT disk_ioctl (
     switch (pdrv) {
     case DEV_FLOPPY:
     case DEV_HDD:
-        res = RES_OK;
-
-        return res;
+        switch (cmd) {
+        case CTRL_SYNC:
+            res = RES_OK;
+            break;
+        case GET_SECTOR_COUNT:
+            *(DWORD*) buff = disk_get_sector_size(pdrv == DEV_HDD ? 0x80 : 0);
+            res = RES_OK;
+            break;
+        case GET_BLOCK_SIZE:
+            *(DWORD*) buff = 16;
+            res = RES_OK;
+            break;
+        }
+        return RES_PARERR;
     }
 
     return RES_PARERR;
