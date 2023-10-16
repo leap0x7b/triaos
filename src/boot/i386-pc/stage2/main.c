@@ -1,4 +1,3 @@
-#define DBG
 #include <lib/vga.h>
 #include <lib/e9.h>
 #include <lib/printf.h>
@@ -16,12 +15,12 @@ void main(void) {
     e9_write("OK\n");
     e9_write("[triaboot-stage2] Floppy MBR content:\n");
     char buf[512];
-    disk_read_bytes(0, buf, 0, 512);
+    disk_read_bytes(0x80, buf, 0, 512);
     for (int i = 0; i < 512; i++)
         e9_write_char((buf[i] >= ' ' && buf[i] <= '~') ? buf[i] : '.');
     e9_write_char('\n');
     FATFS fs;
-    FRESULT result = f_mount(&fs, "0:", 1);
+    FRESULT result = f_mount(&fs, "1:", 1);
     if (result != FR_OK)
         e9_printf("[triaboot-stage2] FATFS Error: %d\n", result);
     FIL readme_file;

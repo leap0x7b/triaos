@@ -1,10 +1,10 @@
-extern bss_begin
+extern bss_start
 extern bss_end
 extern stack_end
 extern main
-global stage2_entry
+global _start
 
-stage2_entry:
+_start:
     mov eax, 0x20
     mov ds, ax
     mov es, ax
@@ -14,9 +14,9 @@ stage2_entry:
     mov esp, stack_end
 
     xor al, al
-    mov edi, bss_begin
+    mov edi, bss_start
     mov ecx, bss_end
-    sub ecx, bss_begin
+    sub ecx, bss_start
     rep stosb
 
     call main

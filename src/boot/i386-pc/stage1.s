@@ -1,39 +1,21 @@
-section .stage1
-
-global _start
-extern stage2_begin
-extern stage2_sector_size
-extern stack_end
-extern stage2_entry
-
+org 0x7c00
 bits 16
+
 _start:
     jmp short entry
     nop
 
-;%define FLOPPY
-%ifdef FLOPPY ; Floppy disks have to be formatted in FAT12/16
+;%define TRIAFS
+%ifdef TRIAFS
 bpb:
-    .oem_name db 'triaOS  '
-    .bytes_per_sector dw 512
-    .sectors_per_cluster db 1
-    .reserved_sectors dw 40
-    .fat_count db 2
-    .root_dir_entries dw 0xe0
-    .sector_count dw 2880
-    .media_descriptor db 0xf0
-    .sectors_per_fat dw 9
-    .sectors_per_track dw 18
-    .head_count dw 2
-    .hidden_sectors dd 0
-    .large_sector_count dd 0
-    ; FAT12/16 extended BPB
-    .drive_number db 0
-    .reserved db 0
-    .boot_signature db 0x29
-    .serial_number dd 0x761a05 ; triaOS spelled in hexadecimal
+    .magic db 'TRIAFS', 0x7f
+    .version db 1
+    .bytes_per_block dw 512
+    .block_count db 0
+    .root_dir_block_count dw 0
+    .drive_number db 0x80
+    .serial_number dd 0x54524941 ; "TRIA" in hexadecimal
     .volume_label db 'triaOS0.1.0'
-    .file_system db 'FAT16   '
 %else
 bpb:
     .oem_name db 'triaOS  '
@@ -44,24 +26,24 @@ bpb:
     .root_dir_entries dw 0
     .sector_count dw 0
     .media_descriptor db 0xf8
-    .sectors_per_fat dw 9
-    .sectors_per_track dw 18
-    .head_count dw 2
+    .sectors_per_fat dw 0
+    .sectors_per_track dw 32
+    .head_count dw 64
     .hidden_sectors dd 0
-    .large_sector_count dd 0
+    .large_sector_count dd 0x00020000
     ; FAT32 extended BPB
-    .sectors_per_fat32 dd 0
+    .sectors_per_fat32 dd 0x000003f1
     .flags dw 0
     .fat_version_number dw 0
     .root_dir_cluster dd 2
-    .fsinfo_sector dw 0
-    .backup_boot_sector dw 0
+    .fsinfo_sector dw 1
+    .backup_boot_sector dw 6
     .reserved0 times 12 db 0
     ; FAT12/16 extended BPB
     .drive_number db 0x80
     .reserved1 db 0
     .boot_signature db 0x29
-    .serial_number dd 0x761a05 ; triaOS spelled in hexadecimal
+    .serial_number dd 0x54524941 ; "TRIA" in hexadecimal
     .volume_label db 'triaOS0.1.0'
     .file_system db 'FAT32   '
 %endif
@@ -72,6 +54,7 @@ entry:
     mov es, ax
     mov ss, ax
     mov sp, 0x7c00
+    mov [bpb.drive_number], dl
 
     mov si, TRIABOOT_PART1_MSG
     call print
@@ -79,7 +62,40 @@ entry:
     call check_a20
     jnz enable_a20
 
-    call load_stage2
+	mov ax, [bpb.sectors_per_fat]
+
+	mov bx, 2
+	mul bx
+	xor bx, bx
+
+	add ax, [bpb.reserved_sectors]
+	add ax, [bpb.hidden_sectors]
+
+	mov [dap.lba], ax
+	mov word [dap.sector_count], 1
+	mov bx, 0x7e00
+	mov word [dap.offset], 0x7e00
+	call disk_load
+
+	add bx, 0x1a
+	mov ax, word [bx]
+	call cluster_to_lba
+	mov [dap.lba], ax
+
+	mov bx, 0x7e00
+	add bx, 28
+	mov eax, dword [bx]
+	mov bx, 512
+	div bx
+
+	cmp dx, 0
+	je .part2
+	add ax, 1
+.part2:
+	mov dl, 0x80
+	mov word [dap.sector_count], ax
+	call disk_load
+
     call protected_mode_switch
 
     jmp $
@@ -169,68 +185,38 @@ enable_a20:
     jz error
     call check_a20
     jnz error
-    ; Keyboard method
-    call .kbd_wait
-    mov al, 0xad
-    out 0x64, al
-    call .kbd_wait
-    mov al, 0xd0
-    out 0x64, al
-    call .kbd_wait2
-    in al, 0x60
-    push ax
-    call .kbd_wait
-    mov al, 0xd1
-    out 0x64, al
-    call .kbd_wait
-    pop ax
-    or al, 2
-    out 0x60, al
-    call .kbd_wait
-    mov al, 0xae
-    out 0x64, al
-    call .kbd_wait
-    call check_a20
-    jnz error
-    ret
 
-.kbd_wait:
-    in al, 0x64
-    test al, 2
-    jnz .kbd_wait
-    ret
-
-.kbd_wait2:
-    in al, 0x64
-    test al, 1
-    jz .kbd_wait2
-    ret
-
-load_stage2:
-    mov bx, stage2_begin
-    mov dh, stage2_sector_size
-    call disk_load
-    ret
+dap:
+	.size db 0x10
+	.reserved db 0
+    .sector_count dw 28
+    .offset dw 0x7e00
+    .segment dw 0
+    .lba dq 0
 
 disk_load:
     pusha
-    push dx
 
-    mov ah, 2
-    mov al, dh
-    mov cl, 2
-    xor ch, ch
-    xor dh, dh
+	mov dl, 0x80
+	mov ah, 0x42
+	mov si, dap
+	int 13h
 
-    int 0x13
+	mov ah, 0xe
     jc error
-
-    pop dx
-    cmp al, dh
-    jne error
 
     popa
     ret
+
+cluster_to_lba:
+	sub ax, 2
+	xor bx, bx
+	mov bl, byte [bpb.sectors_per_cluster]
+	mul bx
+	add ax, word [bpb.reserved_sectors]
+	add ax, [bpb.sectors_per_fat32]
+	add ax, [bpb.sectors_per_fat32]
+	ret
 
 gdt:
     dq 0
@@ -281,6 +267,10 @@ protected_mode_switch:
     bts ax, 0
     mov cr0, eax
 
-    jmp 0x18:stage2_entry
+    jmp 0x18:0x7e00
 
 TRIABOOT_PART1_MSG: db "tr", 0
+TRIABOOT_FILENAME: db "TRIABOOT S2"
+
+times 510-($-$$) db 0x00
+dw 0xaa55
