@@ -4,7 +4,7 @@
 .type _start, @function
 _start:
     // boot block header - https://developer.apple.com/library/archive/documentation/mac/pdf/Operating_System_Utilities/Start_Mgr.pdf
-    .short  0x4c4B              /* boot blocks signature */
+    .short  0x4C4B              /* boot blocks signature */
     bra     code                /* entry point to bootcode */
     .short  0x4418              /* boot blocks version number - sill have no idea what half of this means but it seems to work */
     .short  0x0000              /* reserved */
@@ -25,24 +25,24 @@ _start:
     .byte 14
     .ascii "Clipboard File "    /* name of system scrap file */
 
-    .short  0x000c              /* number of FCBs to allocate */
-    .short  0x001e              /* number of event queue elements */
+    .short  0x000C              /* number of FCBs to allocate */
+    .short  0x001E              /* number of event queue elements */
     .long   0x00004200          /* system heap size on 128K Mac */
     .long   0x00008000          /* reserved */
 SysHeapSize:
     .long   0x0000C000          /* system heap size on machines with 512K or more RAM */
 code:
-    move.l 0x2a6,%a0 // SysZone
+    move.l 0x2A6, %a0 // SysZone
     add.l %pc@(SysHeapSize),%a0
-    .short 0xa057 // _SetAppBase
-    move.l 0x2a6, 0x118 // SysZone -> TheZone
+    .short 0xA057 // _SetAppBase
+    move.l 0x2A6, 0x118 // SysZone -> TheZone
 
     // check if there is enough of memory at stage2_start
     move.l 0x0108, %d0      // get memory top pointer
-    move.l #0xAb01, %d7
+    move.l #0xAB01, %d7
     cmpi.l #stage2_end,%d0
     ble error
-    move.l 0x02b2, %d0      // get memory base pointer
+    move.l 0x02B2, %d0      // get memory base pointer
     move.l #0xAB02, %d7
     cmpi.l #stage2_start,%d0
     bgt error

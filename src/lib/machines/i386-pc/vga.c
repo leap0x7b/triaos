@@ -7,31 +7,31 @@
  
 #define VGA_COLUMNS 80
 #define VGA_ROWS 25
-#define VGA_ADDRESS 0xb8000
+#define VGA_ADDRESS 0xB8000
 
 static size_t vga_row;
 static size_t vga_column;
 static uint8_t vga_color;
 static uint16_t *vga_buffer = (uint16_t *)VGA_ADDRESS;
 
-void vga_set_cursor(size_t offset) {
-    outb(0x3d4, 14);
-    outb(0x3d5, (uint8_t)(offset >> 8));
-    outb(0x3d4, 15);
-    outb(0x3d5, (uint8_t)(offset & 0xff));
+void TiVgaSetCursor(size_t offset) {
+    TiIoOutByte(0x3D4, 14);
+    TiIoOutByte(0x3D5, (uint8_t)(offset >> 8));
+    TiIoOutByte(0x3D4, 15);
+    TiIoOutByte(0x3D5, (uint8_t)(offset & 0xff));
 }
 
-size_t vga_get_cursor(void) {
-    outb(0x3d4, 14);
-    size_t offset = inb(0x3d5) << 8;
-    outb(0x3d4, 15);
-    offset += inb(0x3d5);
+size_t TiVgaGetCursor(void) {
+    TiIoOutByte(0x3D4, 14);
+    size_t offset = TiIoInByte(0x3d5) << 8;
+    TiIoOutByte(0x3D4, 15);
+    offset += TiIoInByte(0x3D5);
     return offset;
 }
 
-void vga_init(void) {
-    vga_row = vga_get_cursor() / VGA_COLUMNS;
-    vga_column = vga_get_cursor() % VGA_COLUMNS;
+void TiVgaInit(void) {
+    vga_row = TiVgaGetCursor() / VGA_COLUMNS;
+    vga_column = TiVgaGetCursor() % VGA_COLUMNS;
     vga_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 }
 
@@ -39,11 +39,11 @@ void vga_set_color(uint8_t color) {
     vga_color = color;
 }
 
-void vga_write_char_at(char c, uint8_t color, size_t column, size_t row) {
+void TiVgaWriteChar_at(char c, uint8_t color, size_t column, size_t row) {
     vga_buffer[row * VGA_COLUMNS + column] = vga_entry(c, color);
 }
 
-void vga_write_char(char c) {
+void TiVgaWriteChar(char c) {
     switch (c) {
         case '\n':
             vga_row++;
@@ -56,7 +56,7 @@ void vga_write_char(char c) {
             vga_column += 4;
 
         default:
-            vga_write_char_at(c, vga_color, vga_column, vga_row);
+            TiVgaWriteChar_at(c, vga_color, vga_column, vga_row);
             vga_column++;
     }
 
@@ -73,20 +73,20 @@ void vga_write_char(char c) {
         }
     }
 
-    vga_set_cursor(vga_row * VGA_COLUMNS + vga_column);
+    TiVgaSetCursor(vga_row * VGA_COLUMNS + vga_column);
 }
 
-void vga_write(const char *string) {
+void TiVgaWrite(const char *string) {
     for (size_t i = 0; i < strlen(string); i++)
-        vga_write_char(string[i]);
+        TiVgaWriteChar(string[i]);
 }
 
 static void _printf_callback(int c, void *_) {
     (void)_;
-    vga_write_char(c);
+    TiVgaWriteChar(c);
 }
 
-int vga_printf(const char *format, ...) {
+int TiVgaPrintf(const char *format, ...) {
     va_list args;
     va_start(args, format);
     int ret = npf_vpprintf(&_printf_callback, NULL, format, args);
@@ -94,6 +94,6 @@ int vga_printf(const char *format, ...) {
     return ret;
 }
 
-int vga_vprintf(const char *format, va_list args) {
+int TiVgaVPrintf(const char *format, va_list args) {
     return npf_vpprintf(&_printf_callback, NULL, format, args);
 }

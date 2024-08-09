@@ -5,12 +5,12 @@ extern main
 global _start
 
 _start:
-    mov eax, 0x20
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ss, ax
+    mov eax, 0x10
+    mov ds, eax
+    mov es, eax
+    mov fs, eax
+    mov gs, eax
+    mov ss, eax
     mov esp, stack_end
 
     xor al, al

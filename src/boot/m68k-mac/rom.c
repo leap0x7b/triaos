@@ -1,8 +1,8 @@
 #include <stdint.h>
 #include <boot/m68k-mac/rom.h>
 
-extern void _rom_initgraf(grafport_t **port);
+extern void _BiRomInitGraf(BiQdGrafPort **port);
 
-void rom_initgraf(grafport_t *port) {
-    _rom_initgraf(&port);
+void BiRomInitGraf(BiQdGrafPort *port) {
+    _BiRomInitGraf(&port);
 }

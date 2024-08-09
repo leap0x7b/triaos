@@ -27,12 +27,12 @@ typedef enum vga_color {
 #define vga_entry_color(fg, bg) ((vga_color_t)fg | (vga_color_t)bg << 4)
 #define vga_entry(c, color) ((char)c | (uint8_t)color << 8)
  
-void vga_init(void);
-void vga_set_cursor(size_t offset);
-size_t vga_get_cursor(void);
-void vga_write_char(char c);
-void vga_write(const char *string);
-int vga_printf(const char *format, ...);
-int vga_vprintf(const char *format, va_list args);
+void TiVgaInit(void);
+void TiVgaSetCursor(size_t offset);
+size_t TiVgaGetCursor(void);
+void TiVgaWriteChar(char c);
+void TiVgaWrite(const char *string);
+int TiVgaPrintf(const char *format, ...);
+int TiVgaVPrintf(const char *format, va_list args);
 
 #endif

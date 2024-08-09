@@ -169,7 +169,7 @@ int ff_mutex_take (	/* Returns 1:Succeeded or 0:Timeout */
 	return (int)(xSemaphoreTake(Mutex[vol], FF_FS_TIMEOUT) == pdTRUE);
 
 #elif OS_TYPE == 4	/* CMSIS-RTOS */
-	return (int)(osMutexWait(Mutex[vol], FF_FS_TIMEOUT) == osOK);
+	return (int)(osMutexBootIoWait(Mutex[vol], FF_FS_TIMEOUT) == osOK);
 
 #endif
 }

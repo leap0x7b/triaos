@@ -8,11 +8,11 @@ extern void *stack_end[];
 static size_t heap_allocator_base = (size_t)stack_end;
 static size_t heap_allocator_limit = 0x80000;
 
-void *mem_alloc(size_t count) {
-    return mem_alloc_aligned(count, 4);
+void *BiAllocate(size_t count) {
+    return BiAllocateAligned(count, 4);
 }
 
-void *mem_alloc_aligned(size_t count, size_t alignment) {
+void *BiAllocateAligned(size_t count, size_t alignment) {
     size_t new_base = ALIGN_UP(heap_allocator_base, alignment);
     void *ret = (void *)new_base;
     new_base += count;

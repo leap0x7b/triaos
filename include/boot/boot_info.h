@@ -4,52 +4,52 @@
 #include <stdint.h>
 #include <stddef.h>
 
-typedef enum memmap_entry_type {
+typedef enum {
     MEMMAP_USABLE = 1,
     MEMMAP_RESERVED = 2,
     MEMMAP_ACPI_RECLAIMABLE = 3,
     MEMMAP_ACPI_NVS = 4,
     MEMMAP_CORRUPTED = 5,
-} memmap_entry_type_t;
+} BeMemmapEntryType;
 
-typedef struct memmap_entry {
+typedef struct {
     uint64_t base;
     uint64_t length;
-    memmap_entry_type_t type;
+    BeMemmapEntryType type;
     uint32_t unused;
-} memmap_entry_t;
+} BeMemmapEntry;
 
-typedef struct memmap {
+typedef struct {
     size_t entry_count;
-    memmap_entry_t **entries;
-} memmap_t;
+    BeMemmapEntry **entries;
+} BeMemmap;
 
-typedef enum framebuffer_memory_model {
-    MEMORY_MODEL_RGB = 1,
-    MEMORY_MODEL_BGR = 2,
-    MEMORY_MODEL_RGBA = 3,
-    MEMORY_MODEL_BGRA = 4,
-} framebuffer_memory_model_t;
+typedef enum {
+    FRAMEBUFFER_MEMORY_MODEL_RGB = 1,
+    FRAMEBUFFER_MEMORY_MODEL_BGR = 2,
+    FRAMEBUFFER_MEMORY_MODEL_RGBA = 3,
+    FRAMEBUFFER_MEMORY_MODEL_BGRA = 4,
+} BeFramebufferMemoryModel;
 
-typedef struct framebuffer {
+typedef struct {
     uint64_t address;
     uint32_t width;
     uint32_t height;
     uint32_t pitch;
     uint16_t bpp;
-    framebuffer_memory_model_t memory_model;
+    BeFramebufferMemoryModel memory_model;
     uint8_t red_mask_size;
     uint8_t red_mask_shift;
     uint8_t green_mask_size;
     uint8_t green_mask_shift;
     uint8_t blue_mask_size;
     uint8_t blue_mask_shift;
-} framebuffer_t;
+} BeFramebuffer;
 
-typedef struct boot_info {
-    uint32_t magic; // 0x761ab007 ("triaboot" spelled in hexadecimal)
-    memmap_t memmap;
-    framebuffer_t framebuffer;
-} boot_info_t;
+typedef struct {
+    uint32_t magic; // 0x761AB007 ("triaboot" spelled in hexadecimal)
+    BeMemmap memmap;
+    BeFramebuffer framebuffer;
+} BeBootInfo;
 
 #endif

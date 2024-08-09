@@ -3,9 +3,9 @@
 
 #include <stdarg.h>
 
-void e9_write_char(char c);
-void e9_write(const char *string);
-int e9_printf(const char *format, ...);
-int e9_vprintf(const char *format, va_list args);
+void TiE9Char(char c);
+void TiE9(const char *string);
+int TiE9Printf(const char *format, ...);
+int TiE9VPrintf(const char *format, va_list args);
 
 #endif

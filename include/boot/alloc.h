@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-void *mem_alloc(size_t count);
-void *mem_alloc_aligned(size_t count, size_t alignment);
+void *BiAllocate(size_t count);
+void *BiAllocateAligned(size_t count, size_t alignment);
 
 #endif

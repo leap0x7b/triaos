@@ -5,21 +5,21 @@
 #include <lib/nanoprintf_config.h>
 #include <lib/nanoprintf.h>
 
-void e9_write_char(char c) {
-    outb(0xe9, c);
+void TiE9Char(char c) {
+    TiIoOutByte(0xE9, c);
 }
 
-void e9_write(const char *string) {
+void TiE9(const char *string) {
     for (size_t i = 0; i < strlen(string); i++)
-        e9_write_char(string[i]);
+        TiE9Char(string[i]);
 }
 
 static void _printf_callback(int c, void *_) {
     (void)_;
-    e9_write_char(c);
+    TiE9Char(c);
 }
 
-int e9_printf(const char *format, ...) {
+int TiE9Printf(const char *format, ...) {
     va_list args;
     va_start(args, format);
     int ret = npf_vpprintf(&_printf_callback, NULL, format, args);
@@ -27,6 +27,6 @@ int e9_printf(const char *format, ...) {
     return ret;
 }
 
-int e9_vprintf(const char *format, va_list args) {
+int TiE9VPrintf(const char *format, va_list args) {
     return npf_vpprintf(&_printf_callback, NULL, format, args);
 }

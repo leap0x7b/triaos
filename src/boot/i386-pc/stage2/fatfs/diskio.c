@@ -10,7 +10,7 @@
 #include <lib/fatfs/ff.h>			/* Obtains integer types */
 #include <lib/fatfs/diskio.h>		/* Declarations of disk functions */
 
-#include <boot/disk.h>
+#include <boot/i386-pc/disk.h>
 #include <lib/e9.h>
 
 /* Definitions of physical drive number for each drive */
@@ -80,8 +80,8 @@ DRESULT disk_read (
         if (!buff)
             return RES_PARERR;
 
-        e9_printf("buf addr: 0x%x, sector: %d, count: %d\n", buff, sector, count);
-        disk_read_bytes(0, buff, sector, count * disk_get_sector_size(0));
+        TiE9Printf("buf addr: 0x%x, sector: %d, count: %d\n", buff, sector, count);
+        BiDiskReadBytes(0, buff, sector, count * BiDiskGetSectorSize(0));
 
         return RES_OK;
 
@@ -89,8 +89,8 @@ DRESULT disk_read (
         if (!buff)
             return RES_PARERR;
 
-        e9_printf("buf addr: 0x%x, sector: %d, count: %d\n", buff, sector, count);
-        disk_read_bytes(0, buff, sector, count * disk_get_sector_size(0x80));
+        TiE9Printf("buf addr: 0x%x, sector: %d, count: %d\n", buff, sector, count);
+        BiDiskReadBytes(0, buff, sector, count * BiDiskGetSectorSize(0x80));
 
         return RES_OK;
     }
@@ -151,7 +151,7 @@ DRESULT disk_ioctl (
             res = RES_OK;
             break;
         case GET_SECTOR_COUNT:
-            *(DWORD*) buff = disk_get_sector_size(pdrv == DEV_HDD ? 0x80 : 0);
+            *(DWORD*) buff = BiDiskGetSectorSize(pdrv == DEV_HDD ? 0x80 : 0);
             res = RES_OK;
             break;
         case GET_BLOCK_SIZE:

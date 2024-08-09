@@ -4,6 +4,8 @@
 
 ifneq ($(VERBOSE), 1)
 	Q := @
+	MKDOSFS_V := -v
+	DD_STATUS := status=none
 endif
 
 SHELL = bash
@@ -49,12 +51,12 @@ LDHARDFLAGS := \
 	-L$(SRCDIR) -lcompiler_rt \
 	-zmax-page-size=0x1000 \
 	--no-dynamic-linker
-QEMUHARDFLAGS := -machine q35,accel=kvm,whpx,hvf  -debugcon stdio
+QEMUHARDFLAGS := -machine q35,accel=kvm:whpx:hvf -debugcon stdio
 else ifeq ($(TARGET), m68k-mac)
-CC = m68k-elf-gcc
-AS = m68k-elf-gcc
-LD = m68k-elf-ld
-OBJCOPY = m68k-elf-objcopy
+CC = m68k-none-elf-gcc
+AS = m68k-none-elf-as
+LD = m68k-none-elf-ld
+OBJCOPY = m68k-none-elf-objcopy
 QEMU = qemu-system-m68k
 
 CFLAGS ?= -Og -gdwarf
@@ -72,7 +74,7 @@ ASHARDFLAGS := $(CFLAGS)
 LDHARDFLAGS := \
 	-nostdlib -static \
 	-L$(BUILDDIR) -ltria
-QEMUHARDFLAGS := -machine q800 -bios ../mac/Q800.ROM
+QEMUHARDFLAGS := -machine q800 -bios ../mac/Quadra800.ROM
 else
 $(error Invalid target: $(TARGET))
 endif
@@ -124,15 +126,13 @@ kernel: $(KERNEL)
 ifeq ($(TARGET), i386-pc)
 $(TRIABOOT_IMG): $(TRIABOOT_STAGE1) $(TRIABOOT)
 	@$(MKCWD)
-	@echo -e "[MKDOSFS]\t$(@:$(BUILDDIR)/%=%)"
-	$(Q)touch $@
-	$(Q)truncate -s 64M $@
-	$(Q)mkdosfs -F 32 -I -S 512 -v $@
 	@echo -e "[DD]\t\t$(@:$(BUILDDIR)/%=%)"
-	$(Q)dd if=$(TRIABOOT_STAGE1) of=$(TRIABOOT_IMG) bs=1 count=3 conv=notrunc
-	$(Q)dd if=$(TRIABOOT_STAGE1) of=$(TRIABOOT_IMG) bs=1 count=433 seek=79 skip=79 conv=notrunc
+	$(Q)dd if=/dev/zero of=$(TRIABOOT_IMG) bs=512 count=8192 $(DD_STATUS)
+	$(Q)dd if=$(TRIABOOT_STAGE1) of=$(TRIABOOT_IMG) bs=512 count=1 conv=notrunc $(DD_STATUS)
+	$(Q)dd if=$(TRIABOOT) of=$(TRIABOOT_IMG) bs=512 seek=8 conv=notrunc $(DD_STATUS)
 	@echo -e "[MTOOLS]\t$(@:$(BUILDDIR)/%=%)"
-	$(Q)mcopy -i $(TRIABOOT_IMG) $(TRIABOOT) ::/
+	$(Q)mformat -i $(TRIABOOT_IMG) -c 1 -k -R 48 ::
+	$(Q)mcopy -i $(TRIABOOT_IMG) $(KERNEL) ::/
 
 $(TRIABOOT_STAGE1): $(SRCDIR)/boot/$(TARGET)/stage1.s
 	@$(MKCWD)
@@ -205,6 +205,16 @@ $(BUILDDIR)/lib/%.c.o: $(SRCDIR)/lib/%.c
 	$(Q)$(CC) $(CFLAGS) $(CHARDFLAGS) -c $< -o $@
 
 $(BUILDDIR)/lib/%.s.o: $(SRCDIR)/lib/%.s
+	@$(MKCWD)
+	@echo -e "[AS]\t\t$(<:$(SRCDIR)/%=%)"
+	$(Q)$(AS) $(ASHARDFLAGS) -I$(SRCDIR)/lib $< -o $@
+
+$(BUILDDIR)/lib/%.c.o: $(SRCDIR)/lib/machines/$(TARGET)/%.c
+	@$(MKCWD)
+	@echo -e "[CC]\t\t$(<:$(SRCDIR)/%=%)"
+	$(Q)$(CC) $(CFLAGS) $(CHARDFLAGS) -c $< -o $@
+
+$(BUILDDIR)/lib/%.s.o: $(SRCDIR)/lib/machines/$(TARGET)/%.s
 	@$(MKCWD)
 	@echo -e "[AS]\t\t$(<:$(SRCDIR)/%=%)"
 	$(Q)$(AS) $(ASHARDFLAGS) -I$(SRCDIR)/lib $< -o $@

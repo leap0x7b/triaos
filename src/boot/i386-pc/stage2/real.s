@@ -1,8 +1,8 @@
 ; Adapted from Limine (https://github.com/limine-bootloader/limine/blob/trunk/common/lib/real.s2.asm_bios_ia32)
 ; Originally licensed under BSD-2-Clause
 
-global real_int
-real_int:
+global BiRealInterrupt
+BiRealInterrupt:
     mov al, byte [esp + 4]
     mov byte [.int_num], al
 
@@ -30,7 +30,7 @@ bits 16
     mov gs, ax
     mov ss, ax
     mov eax, cr0
-    and al, 0xfe
+    and al, 0xFE
     mov cr0, eax
     jmp 0:.cs_zero
 

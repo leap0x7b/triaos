@@ -8,8 +8,8 @@ void *bss_end;
 void main(void) {
     memset((void *)&bss_start, 0, (uint32_t)&bss_end - (uint32_t)&bss_start);
 
-    grafport_t grafport;
-    rom_initgraf(&grafport);
+    BiQdGrafPort grafport;
+    BiRomInitGraf(&grafport);
     memset(grafport.bitmap.address, 0, (grafport.bitmap.bounds.bottom - grafport.bitmap.bounds.top) * (grafport.bitmap.row_bytes & 0x3fff));
 
     while (1)

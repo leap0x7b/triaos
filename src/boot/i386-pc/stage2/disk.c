@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stddef.h>
-#include <boot/disk.h>
-#include <boot/real.h>
+#include <boot/i386-pc/disk.h>
+#include <boot/i386-pc/real.h>
 #include <boot/alloc.h>
 #include <lib/string.h>
 #include <lib/misc.h>
@@ -34,30 +34,30 @@ static int cache_block(int drive, uint64_t block, int sector_size) {
         return 0;
 
     if (!dap) {
-        dap = mem_alloc(sizeof(dap_t));
+        dap = BiAllocate(sizeof(dap_t));
         dap->size = 16;
         dap->count = BLOCK_SIZE_IN_SECTORS;
     }
 
     if (!cache)
-        cache = mem_alloc_aligned(MAX_CACHE, 16);
+        cache = BiAllocateAligned(MAX_CACHE, 16);
 
-    dap->segment = real_segment(cache);
-    dap->offset = real_offset(cache);
+    dap->segment = BiRealSegment(cache);
+    dap->offset = BiRealOffset(cache);
     dap->lba = block * BLOCK_SIZE_IN_SECTORS;
 
     struct real_regs regs = {0};
     regs.eax = 0x4200;
     regs.edx = drive;
-    regs.esi = (uint32_t)real_offset(dap);
-    regs.ds = real_segment(dap);
+    regs.esi = (uint32_t)BiRealOffset(dap);
+    regs.ds = BiRealSegment(dap);
 
-    real_int(0x13, &regs, &regs);
+    BiRealInterrupt(0x13, &regs, &regs);
 
     if (regs.eflags & EFLAGS_CF) {
-        int ah = (regs.eax >> 8) & 0xff;
-        e9_printf("[triaboot-stage1] Disk read error: 0x%.4x (drive number %d)\n", ah, drive);
-        vga_printf("!%.4X", ah);
+        int ah = (regs.eax >> 8) & 0xFF;
+        TiE9Printf("[triaboot-stage1] Disk read error: 0x%.4x (drive number %d)\n", ah, drive);
+        TiVgaPrintf("!%.4X", ah);
         while (1)
             __asm__ volatile ("hlt");
         __builtin_unreachable();
@@ -69,23 +69,23 @@ static int cache_block(int drive, uint64_t block, int sector_size) {
     return 0;
 }
 
-int disk_get_sector_size(int drive) {
-    real_regs_t regs = {0};
-    drive_params_t drive_params;
+int BiDiskGetSectorSize(int drive) {
+    BiRealRegisters regs = {0};
+    BiDriveParams drive_params;
 
     regs.eax = 0x4800;
     regs.edx = drive;
-    regs.ds = real_segment(&drive_params);
-    regs.esi = real_offset(&drive_params);
+    regs.ds = BiRealSegment(&drive_params);
+    regs.esi = BiRealOffset(&drive_params);
 
-    drive_params.buffer_size = sizeof(drive_params_t);
+    drive_params.buffer_size = sizeof(BiDriveParams);
 
-    real_int(0x13, &regs, &regs);
+    BiRealInterrupt(0x13, &regs, &regs);
 
     if (regs.eflags & EFLAGS_CF) {
-        int ah = (regs.eax >> 8) & 0xff;
-        e9_printf("[triaboot-stage1] Disk read error: 0x%.4x (drive number %d)\n", ah, drive);
-        vga_printf("!%.4X", ah);
+        int ah = (regs.eax >> 8) & 0xFF;
+        TiE9Printf("[triaboot-stage1] Disk read error: 0x%.4x (drive number %d)\n", ah, drive);
+        TiVgaPrintf("!%.4X", ah);
         while (1)
             __asm__ volatile ("hlt");
         __builtin_unreachable();
@@ -94,8 +94,8 @@ int disk_get_sector_size(int drive) {
     return drive_params.bytes_per_sector;
 }
 
-int disk_read_bytes(int drive, void *buffer, uint64_t loc, uint64_t count) {
-    int sector_size = disk_get_sector_size(drive);
+int BiDiskReadBytes(int drive, void *buffer, uint64_t loc, uint64_t count) {
+    int sector_size = BiDiskGetSectorSize(drive);
 
     uint64_t progress = 0;
     while (progress < count) {

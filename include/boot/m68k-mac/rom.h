@@ -2,56 +2,56 @@
 #include <stdint.h>
 
 // SysError
-void rom_syserror(uint16_t code);
+void BiRomSysError(uint16_t code);
 
 // QuickDraw
 typedef struct {
     uint8_t patterns[8];
-} pattern_t;
+} BiQdPattern;
 
 typedef struct {
     int16_t top;
     int16_t left;
     int16_t bottom;
     int16_t right;
-} rect_t;
+} BiQdRect;
 
 typedef struct {
     void *address;
     uint16_t row_bytes;
-    rect_t bounds;
-} bitmap_t;
+    BiQdRect bounds;
+} BiQdBitmap;
 
 typedef struct {
     uint16_t v;
     uint16_t h;
-} point_t;
+} BiQdPoint;
 
-typedef struct Cursor {
+typedef struct {
     int16_t data[16];
     int16_t mask[16];
-    point_t hot_spot;
-} cursor_t;
+    BiQdPoint hot_spot;
+} BiQdCursor;
 
 // https://developer.apple.com/library/archive/documentation/mac/pdf/ImagingWithQuickDraw.pdf
 typedef struct {
     uint8_t _internal[76];
-    int32_t randdom_seed;
-    bitmap_t bitmap;
-    cursor_t arrow;
-    pattern_t dark_gray;
-    pattern_t light_gray;
-    pattern_t gray;
-    pattern_t black;
-    pattern_t white;
+    int32_t random_seed;
+    BiQdBitmap bitmap;
+    BiQdCursor arrow;
+    BiQdPattern dark_gray;
+    BiQdPattern light_gray;
+    BiQdPattern gray;
+    BiQdPattern black;
+    BiQdPattern white;
     void *port;
-} grafport_t;
+} BiQdGrafPort;
 
 // https://developer.apple.com/library/archive/documentation/mac/pdf/Imaging_With_QuickDraw/Color_QuickDraw.pdf
 typedef struct {
     void *address;
     int16_t row_bytes;
-    rect_t bounds;
+    BiQdRect bounds;
     int16_t verion;
     int16_t packing_type;
     uint32_t packed_size;
@@ -64,7 +64,7 @@ typedef struct {
     int32_t plane_bytes;
     void *table;
     int32_t _reserved;
-} pixmap_t;
+} BiQdPixmap;
 
 // https://developer.apple.com/library/archive/documentation/mac/pdf/Imaging_With_QuickDraw/Graphics_Devices.pdf
 typedef struct {
@@ -72,7 +72,7 @@ typedef struct {
     int16_t depth;
     void *handle;
     void *mask;
-} cursor_data_t;
+} BiQdCursorData;
 
 // https://developer.apple.com/library/archive/documentation/mac/pdf/Imaging_With_QuickDraw/Graphics_Devices.pdf
 typedef struct {
@@ -84,13 +84,13 @@ typedef struct {
     void *search_proc;
     void *complement_proc;
     int16_t flags;
-    pixmap_t **pixmap;
+    BiQdPixmap **pixmap;
     int32_t reference_value;
     int32_t next_gdevice;
-    rect_t rect;
+    BiQdRect rect;
     int32_t mode;
-    cursor_data_t cursor_data;
+    BiQdCursorData cursor_data;
     int32_t _reserved;
-} gdevice_t;
+} BiQdGDevice;
 
-void rom_initgraf(grafport_t *port);
+void BiRomInitGraf(BiQdGrafPort *port);

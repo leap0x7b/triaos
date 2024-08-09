@@ -5,56 +5,49 @@ _start:
     jmp short entry
     nop
 
-;%define TRIAFS
-%ifdef TRIAFS
-bpb:
-    .magic db 'TRIAFS', 0x7f
-    .version db 1
-    .bytes_per_block dw 512
-    .block_count db 0
-    .root_dir_block_count dw 0
-    .drive_number db 0x80
-    .serial_number dd 0x54524941 ; "TRIA" in hexadecimal
-    .volume_label db 'triaOS0.1.0'
-%else
+; keep the bpb mostly empty because it would be overwritten anyway
 bpb:
     .oem_name db 'triaOS  '
     .bytes_per_sector dw 512
-    .sectors_per_cluster db 1
-    .reserved_sectors dw 32
-    .fat_count db 2
+    .sectors_per_cluster db 0
+    .reserved_sectors dw 0
+    .fat_count db 0
     .root_dir_entries dw 0
     .sector_count dw 0
-    .media_descriptor db 0xf8
+    .media_descriptor db 0
     .sectors_per_fat dw 0
-    .sectors_per_track dw 32
-    .head_count dw 64
+    .sectors_per_track dw 0
+    .head_count dw 0
     .hidden_sectors dd 0
-    .large_sector_count dd 0x00020000
+    .large_sector_count dd 0
     ; FAT32 extended BPB
-    .sectors_per_fat32 dd 0x000003f1
+    .sectors_per_fat32 dd 0
     .flags dw 0
     .fat_version_number dw 0
-    .root_dir_cluster dd 2
-    .fsinfo_sector dw 1
-    .backup_boot_sector dw 6
+    .root_dir_cluster dd 0
+    .fsinfo_sector dw 0
+    .backup_boot_sector dw 0
     .reserved0 times 12 db 0
     ; FAT12/16 extended BPB
     .drive_number db 0x80
     .reserved1 db 0
     .boot_signature db 0x29
-    .serial_number dd 0x54524941 ; "TRIA" in hexadecimal
-    .volume_label db 'triaOS0.1.0'
+    .serial_number dd 0x00761A05 ; "triaOS" spelled in hexadecimal
+    .volume_label db 'triaOS 0.10'
     .file_system db 'FAT32   '
-%endif
 
 entry:
+    cli
+    cld
+    jmp 0:.part2
+.part2:
     xor ax, ax
     mov ds, ax
     mov es, ax
     mov ss, ax
-    mov sp, 0x7c00
-    mov [bpb.drive_number], dl
+    mov sp, 0x7C00
+    mov [drive_number], dl
+    sti
 
     mov si, TRIABOOT_PART1_MSG
     call print
@@ -62,104 +55,82 @@ entry:
     call check_a20
     jnz enable_a20
 
-	mov ax, [bpb.sectors_per_fat]
+    mov ah, 0x41
+    mov bx, 0x55AA
+    mov dl, [drive_number]
+    int 13h
+    jc error
 
-	mov bx, 2
-	mul bx
-	xor bx, bx
+    cmp ah, 0x80
+    je error
 
-	add ax, [bpb.reserved_sectors]
-	add ax, [bpb.hidden_sectors]
+    cmp ah, 0x86
+    je error
 
-	mov [dap.lba], ax
-	mov word [dap.sector_count], 1
-	mov bx, 0x7e00
-	mov word [dap.offset], 0x7e00
-	call disk_load
+    mov eax, [dap.lba]
+    add eax, [bpb.hidden_sectors]
+    mov [dap.lba], eax
 
-	add bx, 0x1a
-	mov ax, word [bx]
-	call cluster_to_lba
-	mov [dap.lba], ax
+    mov ah, 0x42
+    mov dl, [drive_number]
+    mov si, dap
+    int 13h
 
-	mov bx, 0x7e00
-	add bx, 28
-	mov eax, dword [bx]
-	mov bx, 512
-	div bx
-
-	cmp dx, 0
-	je .part2
-	add ax, 1
-.part2:
-	mov dl, 0x80
-	mov word [dap.sector_count], ax
-	call disk_load
-
-    call protected_mode_switch
-
-    jmp $
+    jnc protected_mode_switch
+    jmp error
 
 print:
-    mov ah, 0x0e
-
+    mov ah, 0x0E
 .loop:
     lodsb
     cmp al, 0
     je .done
     int 0x10
     jmp .loop
-
 .done:
     ret
 
 print_hex:
     pusha
     mov cx, 4
-
 .loop:
     dec cx
 
     mov ax, dx
     shr dx, 4
-    and ax, 0x0f
+    and ax, 0x0F
 
-    mov bx, HEX_OUT
+    mov bx, .out
     add bx, cx
 
-    cmp ax, 0x0a
+    cmp ax, 0x0A
     jl .step2
 
     add al, 7
     jl .step2
-
 .step2:
     add al, 0x30
     mov byte [bx], al
 
     cmp cx, 0
     je .done
-
     jmp .loop
-
 .done:
-    mov si, HEX_OUT
+    mov si, .out
     call print
 
     popa
     ret
-
-HEX_OUT db "0000", 0
+.out db "0000", 0
 
 error:
     mov dh, ah
     mov al, '!'
-    mov ah, 0x0e
+    mov ah, 0x0E
     int 0x10
 
     call print_hex
     jmp .halt
-
 .halt:
     hlt
     jmp $
@@ -187,90 +158,60 @@ enable_a20:
     jnz error
 
 dap:
-	.size db 0x10
-	.reserved db 0
-    .sector_count dw 28
-    .offset dw 0x7e00
-    .segment dw 0
-    .lba dq 0
-
-disk_load:
-    pusha
-
-	mov dl, 0x80
-	mov ah, 0x42
-	mov si, dap
-	int 13h
-
-	mov ah, 0xe
-    jc error
-
-    popa
-    ret
-
-cluster_to_lba:
-	sub ax, 2
-	xor bx, bx
-	mov bl, byte [bpb.sectors_per_cluster]
-	mul bx
-	add ax, word [bpb.reserved_sectors]
-	add ax, [bpb.sectors_per_fat32]
-	add ax, [bpb.sectors_per_fat32]
-	ret
+    .size db 0x10
+    .reserved db 0
+    .sector_count dw 0x30
+    .address dd 0x7E00
+    .lba dq 8
 
 gdt:
     dq 0
-
 .code16:
-    dw 0xffff
+    dw 0xFFFF
     dw 0
     db 0
     db 10011010b
     db 1
     db 0
-
 .data16:
-    dw 0xffff
+    dw 0xFFFF
     dw 0
     db 0
     db 10010010b
     db 1
     db 0
-
 .code32:
-    dw 0xffff
+    dw 0xFFFF
     dw 0
     db 0
     db 10011010b
     db 11001111b
     db 0
-
 .data32:
-    dw 0xffff
+    dw 0xFFFF
     dw 0
     db 0
     db 10010010b
     db 11001111b
     db 0
-
 .end:
-
 .descriptor:
     dw (.end - gdt) - 1
     dd gdt
 
 protected_mode_switch:
-    lgdt [gdt.descriptor]
     cli
+    lgdt [gdt.descriptor]
 
     mov eax, cr0
     bts ax, 0
     mov cr0, eax
 
-    jmp 0x18:0x7e00
+    jmp 0x18:dap.address
 
-TRIABOOT_PART1_MSG: db "tr", 0
-TRIABOOT_FILENAME: db "TRIABOOT S2"
+TRIABOOT_PART1_MSG db "t", 0
 
-times 510-($-$$) db 0x00
-dw 0xaa55
+times 505-($-$$) db 0
+dd 0x761AB007 ; triaboot signature to validate the vbr when its loaded by the bootsector
+drive_number db 0
+dw 0xAA55
