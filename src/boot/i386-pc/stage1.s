@@ -11,9 +11,9 @@ bpb:
     .bytes_per_sector dw 512
     .sectors_per_cluster db 0
     .reserved_sectors dw 0
-    .fat_count db 0
+    .fats_count db 0
     .root_dir_entries dw 0
-    .sector_count dw 0
+    .sectors_count dw 0
     .media_descriptor db 0
     .sectors_per_fat dw 0
     .sectors_per_track dw 0
@@ -24,7 +24,7 @@ bpb:
     .sectors_per_fat32 dd 0
     .flags dw 0
     .fat_version_number dw 0
-    .root_dir_cluster dd 0
+    .root_directory_cluster dd 0
     .fsinfo_sector dw 0
     .backup_boot_sector dw 0
     .reserved0 times 12 db 0

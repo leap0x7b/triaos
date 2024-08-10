@@ -1,5 +1,5 @@
-#ifndef BOOT__E820_H
-#define BOOT__E820_H
+#ifndef BOOT__I386_PC__E820_H
+#define BOOT__I386_PC__E820_H
 
 #include <boot/boot_info.h>
 

@@ -1,4 +1,6 @@
-#pragma once
+#ifndef BOOT__M68K_MAC__ROM_H
+#define BOOT__M68K_MAC__ROM_H
+
 #include <stdint.h>
 
 // SysError
@@ -94,3 +96,5 @@ typedef struct {
 } BiQdGDevice;
 
 void BiRomInitGraf(BiQdGrafPort *port);
+
+#endif

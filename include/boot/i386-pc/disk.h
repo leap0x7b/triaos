@@ -1,5 +1,5 @@
-#ifndef BOOT__DISK_H
-#define BOOT__DISK_H
+#ifndef BOOT__I386_PC__DISK_H
+#define BOOT__I386_PC__DISK_H
 
 #include <stdint.h>
 
