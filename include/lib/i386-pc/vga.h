@@ -28,9 +28,10 @@ typedef enum {
 #define vga_entry(c, color) ((char)c | (uint8_t)color << 8)
  
 void TiVgaInit(void);
-void TiVgaSetCursor(size_t offset);
-size_t TiVgaGetCursor(void);
+void TiVgaSetCursor(size_t x, size_t y);
+uint16_t TiVgaGetCursor(void);
 void VgaSetColor(TiVgaColor fg, TiVgaColor bg);
+void TiVgaClear(void);
 void TiVgaWriteCharAt(char c, uint8_t color, size_t column, size_t row);
 void TiVgaWriteChar(char c);
 void TiVgaWrite(const char *string);
