@@ -49,8 +49,9 @@ entry:
     mov [drive_number], dl
     sti
 
-    mov si, TRIABOOT_PART1_MSG
-    call print
+    mov al, 't'
+    mov ah, 0x0E
+    int 0x10
 
     call check_a20
     jnz enable_a20
@@ -157,6 +158,51 @@ enable_a20:
     call check_a20
     jnz error
 
+    ; Keyboard method
+    call .kbd_wait
+    mov al, 0xAD
+    out 0x64, al
+    call .kbd_wait
+    mov al, 0xD0
+    out 0x64, al
+    call .kbd_wait2
+    in al, 0x60
+    push ax
+    call .kbd_wait
+    mov al, 0xD1
+    out 0x64, al
+    call .kbd_wait
+    pop ax
+    or al, 2
+    out 0x60, al
+    call .kbd_wait
+    mov al, 0xAE
+    out 0x64, al
+    call .kbd_wait
+    call check_a20
+    jnz error
+
+    ; Fast A20 method
+    in al, 0x92
+    or al, 2
+    jz error
+    or al, 2
+    and al, 0xFE
+    out 0x92, al
+    call check_a20
+    jnz error
+    ret
+.kbd_wait:
+    in al, 0x64
+    test al, 2
+    jnz .kbd_wait
+    ret
+.kbd_wait2:
+    in al, 0x64
+    test al, 1
+    jz .kbd_wait2
+    ret
+
 dap:
     .size db 0x10
     .reserved db 0
@@ -208,8 +254,6 @@ protected_mode_switch:
     mov cr0, eax
 
     jmp 0x18:0x7E00
-
-TRIABOOT_PART1_MSG db "t", 0
 
 times 505-($-$$) db 0
 dd 0x761AB007 ; triaboot signature to validate the vbr when its loaded by the bootsector

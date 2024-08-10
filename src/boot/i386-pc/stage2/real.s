@@ -55,10 +55,10 @@ bits 16
     mov esp, dword [ss:.esp]
 
     sti
-
     db 0xcd
 
 .int_num: db 0
+
     cli
 
     mov dword [ss:.esp], esp

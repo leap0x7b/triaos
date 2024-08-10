@@ -1,6 +1,10 @@
 SECTIONS {
     . = 0x7E00;
 
+    .entry : {
+        *(.start*)
+    }
+
     .text : {
         *(.text*)
     }

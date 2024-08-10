@@ -23,9 +23,6 @@ typedef enum {
     VGA_COLOR_LIGHT_BROWN = 14,
     VGA_COLOR_WHITE = 15,
 } TiVgaColor;
-
-#define vga_entry_color(fg, bg) ((TiVgaColor)fg | (TiVgaColor)bg << 4)
-#define vga_entry(c, color) ((char)c | (uint8_t)color << 8)
  
 void TiVgaInit(void);
 void TiVgaSetCursor(size_t x, size_t y);

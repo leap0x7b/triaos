@@ -12,12 +12,21 @@
 
 static size_t vga_row;
 static size_t vga_column;
-static uint8_t vga_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+static uint8_t vga_color;
 static volatile uint16_t *vga_buffer = (volatile uint16_t *)VGA_ADDRESS;
+
+static inline uint8_t TiVgaEntryColor(TiVgaColor fg, TiVgaColor bg) {
+    return (fg | (bg << 4));
+}
+
+static inline uint16_t TiVgaEntry(char c, uint8_t color) {
+    return c | ((uint16_t)color << 8);
+}
 
 void TiVgaInit(void) {
     vga_row = TiVgaGetCursor() / VGA_COLUMNS;
     vga_column = TiVgaGetCursor() % VGA_COLUMNS;
+    vga_color = TiVgaEntryColor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 }
 
 void TiVgaSetCursor(size_t x, size_t y) {
@@ -43,15 +52,15 @@ uint16_t TiVgaGetCursor(void) {
 }
 
 void TiVgaSetColor(TiVgaColor fg, TiVgaColor bg) {
-    vga_color = vga_entry_color(fg, bg);
+    vga_color = TiVgaEntryColor(fg, bg);
 }
 
 void TiVgaClear(void) {
-    memset((void *)vga_buffer, vga_entry(' ', vga_color), VGA_SIZE);
+    memset((void *)vga_buffer, TiVgaEntry(' ', vga_color), VGA_SIZE);
 }
 
 void TiVgaWriteCharAt(char c, uint8_t color, size_t column, size_t row) {
-    vga_buffer[row * VGA_COLUMNS + column] = vga_entry(c, color);
+    vga_buffer[row * VGA_COLUMNS + column] = TiVgaEntry(c, color);
 }
 
 static void scroll(void) {
@@ -65,7 +74,7 @@ static void scroll(void) {
     }
 
     for (x = 0; x < VGA_COLUMNS; x++) {
-        vga_buffer[y * VGA_COLUMNS + x] = vga_entry(' ', vga_color);
+        vga_buffer[y * VGA_COLUMNS + x] = TiVgaEntry(' ', vga_color);
     }
 
     vga_column = 0;
@@ -87,21 +96,20 @@ void TiVgaWriteChar(char c) {
             // TODO: implement actual tabs instead of simply +=ing
             //       vga_column
             vga_column += 8;
+            break;
 
         default:
             TiVgaWriteCharAt(c, vga_color, vga_column, vga_row);
-            vga_column++;
+            break;
     }
 
     if (c != '\n') {
-        if (vga_column == VGA_COLUMNS) {
+        if (++vga_column == VGA_COLUMNS) {
             vga_column = 0;
-            if (vga_row == VGA_ROWS) {
+            if (++vga_row == VGA_ROWS) {
                 scroll();
             }
-            vga_row += 1;
         }
-        vga_column += 1;
     } else {
         if (vga_row == VGA_ROWS) {
             scroll();
