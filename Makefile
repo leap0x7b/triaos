@@ -59,8 +59,8 @@ LD = m68k-none-elf-ld
 OBJCOPY = m68k-none-elf-objcopy
 QEMU = qemu-system-m68k
 
-CFLAGS ?= -O2 -gdwarf
-ASFLAGS ?= -Fdwarf
+CFLAGS ?= -Og -gdwarf
+ASFLAGS ?= -g -Fdwarf
 LDFLAGS ?=
 QEMUFLAGS ?= -no-reboot -no-shutdown
 QEMUMEMSIZE ?= 512M
@@ -138,9 +138,9 @@ $(TRIABOOT_IMG): $(TRIABOOT_STAGE1) $(TRIABOOT_STAGE2) $(TRIABOOT_STAGE3) $(KERN
 	@echo -e "[DD]\t\t$(@:$(BUILDDIR)/%=%)"
 	$(Q)dd if=/dev/zero of=$(TRIABOOT_IMG) bs=512 count=8192 $(DD_STATUS)
 	$(Q)dd if=$(TRIABOOT_STAGE1) of=$(TRIABOOT_IMG) bs=512 count=1 seek=0 conv=notrunc $(DD_STATUS)
-	$(Q)dd if=$(TRIABOOT_STAGE2) of=$(TRIABOOT_IMG) bs=512 count=16 seek=8 conv=notrunc $(DD_STATUS)
+	$(Q)dd if=$(TRIABOOT_STAGE2) of=$(TRIABOOT_IMG) bs=512 count=32 seek=8 conv=notrunc $(DD_STATUS)
 	@echo -e "[MTOOLS]\t$(@:$(BUILDDIR)/%=%)"
-	$(Q)mformat -i $(TRIABOOT_IMG) -c 1 -k -R 48 ::
+	$(Q)mformat -i $(TRIABOOT_IMG) -c 1 -k -R 32 ::
 	$(Q)mcopy -i $(TRIABOOT_IMG) $(TRIABOOT_STAGE3) ::/triaboot.s3
 	$(Q)mattrib -i $(TRIABOOT_IMG) +r +s +h ::/triaboot.s3
 	$(Q)mmd -i $(TRIABOOT_IMG) ::/TriaOS

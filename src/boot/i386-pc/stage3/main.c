@@ -31,4 +31,8 @@ void Main(void) {
     uint32_t readme_bytes_read;
     f_read(&readme_file, &readme, 1345, &readme_bytes_read);
     TiVgaWrite(readme);
+
+    while (1) {
+        __asm__ ("hlt");
+    }
 }

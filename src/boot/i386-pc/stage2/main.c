@@ -5,4 +5,8 @@ void Main(void) {
     TiE9Write("[triaboot-stage2] Hello World!\n");
     TiVgaInit();
     TiVgaWriteChar('r');
+
+    while (1) {
+        __asm__ ("hlt");
+    }
 }
