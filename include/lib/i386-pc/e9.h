@@ -3,8 +3,8 @@
 
 #include <stdarg.h>
 
-void TiE9Char(char c);
-void TiE9(const char *string);
+void TiE9WriteChar(char c);
+void TiE9Write(const char *string);
 int TiE9Printf(const char *format, ...);
 int TiE9VPrintf(const char *format, va_list args);
 

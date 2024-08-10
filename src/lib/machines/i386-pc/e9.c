@@ -1,22 +1,22 @@
 #include <stddef.h>
-#include <lib/e9.h>
+#include <lib/i386-pc/e9.h>
+#include <lib/i386-pc/io.h>
 #include <lib/string.h>
-#include <lib/io.h>
 #include <lib/nanoprintf_config.h>
 #include <lib/nanoprintf.h>
 
-void TiE9Char(char c) {
+void TiE9WriteChar(char c) {
     TiIoOutByte(0xE9, c);
 }
 
-void TiE9(const char *string) {
+void TiE9Write(const char *string) {
     for (size_t i = 0; i < strlen(string); i++)
-        TiE9Char(string[i]);
+        TiE9WriteChar(string[i]);
 }
 
 static void _printf_callback(int c, void *_) {
     (void)_;
-    TiE9Char(c);
+    TiE9WriteChar(c);
 }
 
 int TiE9Printf(const char *format, ...) {

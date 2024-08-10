@@ -160,7 +160,7 @@ enable_a20:
 dap:
     .size db 0x10
     .reserved db 0
-    .sector_count dw 0x30
+    .sector_count dw 0x20
     .address dd 0x7E00
     .lba dq 8
 
@@ -207,7 +207,7 @@ protected_mode_switch:
     bts ax, 0
     mov cr0, eax
 
-    jmp 0x18:dap.address
+    jmp 0x18:0x7E00
 
 TRIABOOT_PART1_MSG db "t", 0
 

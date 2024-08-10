@@ -7,11 +7,11 @@
 /* storage control modules to the FatFs module with a defined API.       */
 /*-----------------------------------------------------------------------*/
 
-#include <lib/fatfs/ff.h>			/* Obtains integer types */
-#include <lib/fatfs/diskio.h>		/* Declarations of disk functions */
+#include <boot/i386-pc/fatfs/ff.h>			/* Obtains integer types */
+#include <boot/i386-pc/fatfs/diskio.h>		/* Declarations of disk functions */
 
 #include <boot/i386-pc/disk.h>
-#include <lib/e9.h>
+#include <lib/i386-pc/e9.h>
 
 /* Definitions of physical drive number for each drive */
 #define DEV_FLOPPY 0

@@ -1,7 +1,7 @@
 extern bss_start
 extern bss_end
 extern stack_end
-extern main
+extern Main
 global _start
 
 _start:
@@ -19,7 +19,7 @@ _start:
     sub ecx, bss_start
     rep stosb
 
-    call main
+    call Main
     jmp .halt
 
 .halt:

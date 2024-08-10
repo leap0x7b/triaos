@@ -56,7 +56,7 @@ static int cache_block(int drive, uint64_t block, int sector_size) {
 
     if (regs.eflags & EFLAGS_CF) {
         int ah = (regs.eax >> 8) & 0xFF;
-        TiE9Printf("[triaboot-stage2] Disk read error: 0x%.4x (drive number %d)\n", ah, drive);
+        TiE9Printf("[triaboot-stage3] Disk read error: 0x%.4x (drive number %d)\n", ah, drive);
         TiVgaPrintf("!%.4X", ah);
         while (1)
             __asm__ volatile ("hlt");
@@ -84,7 +84,7 @@ int BiDiskGetSectorSize(int drive) {
 
     if (regs.eflags & EFLAGS_CF) {
         int ah = (regs.eax >> 8) & 0xFF;
-        TiE9Printf("[triaboot-stage2] Disk read error: 0x%.4x (drive number %d)\n", ah, drive);
+        TiE9Printf("[triaboot-stage3] Disk read error: 0x%.4x (drive number %d)\n", ah, drive);
         TiVgaPrintf("!%.4X", ah);
         while (1)
             __asm__ volatile ("hlt");

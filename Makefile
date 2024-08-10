@@ -59,8 +59,8 @@ LD = m68k-none-elf-ld
 OBJCOPY = m68k-none-elf-objcopy
 QEMU = qemu-system-m68k
 
-CFLAGS ?= -Og -gdwarf
-ASFLAGS ?= -g -Fdwarf
+CFLAGS ?= -O2 -gdwarf
+ASFLAGS ?= -Fdwarf
 LDFLAGS ?=
 QEMUFLAGS ?= -no-reboot -no-shutdown
 QEMUMEMSIZE ?= 512M
@@ -79,20 +79,29 @@ else
 $(error Invalid target: $(TARGET))
 endif
 
-TRIABOOT := $(BUILDDIR)/triaboot.s2
 TRIABOOT_IMG := $(BUILDDIR)/triaboot.img
-TRIABOOT_TRX := $(BUILDDIR)/triaboot.trx
 TRIABOOT_STAGE1 := $(BUILDDIR)/triaboot.s1
+TRIABOOT_STAGE2 := $(BUILDDIR)/triaboot.s2
+TRIABOOT_STAGE2_TRX := $(BUILDDIR)/triaboot.s2.trx
+TRIABOOT_STAGE3 := $(BUILDDIR)/triaboot.s3
+TRIABOOT_STAGE3_TRX := $(BUILDDIR)/triaboot.s3.trx
 LIB := $(BUILDDIR)/libtria.a
-KERNEL := $(BUILDDIR)/kernel.trx
+KERNEL := $(BUILDDIR)/triakrnl.trx
 
 ifeq ($(TARGET), i386-pc)
-TRIABOOT_CFILES := $(shell find $(SRCDIR)/boot/$(TARGET)/stage2 -name *.c)
-TRIABOOT_ASMFILES := $(shell find $(SRCDIR)/boot/$(TARGET)/stage2 -name *.s)
-TRIABOOT_OBJ := $(patsubst $(SRCDIR)/boot/$(TARGET)/%, $(BUILDDIR)/boot/%, $(TRIABOOT_CFILES:.c=.c.o))
-TRIABOOT_ASMOBJ := $(patsubst $(SRCDIR)/boot/$(TARGET)/%, $(BUILDDIR)/boot/%, $(TRIABOOT_ASMFILES:.s=.s.o))
-TRIABOOT_DEPS := $(patsubst $(SRCDIR)/boot/$(TARGET)/%, $(BUILDDIR)/boot/%, $(TRIABOOT_CFILES:.c=.c.d))
-TRIABOOT_ASMDEPS := $(patsubst $(SRCDIR)/boot/$(TARGET)/%, $(BUILDDIR)/boot/%, $(TRIABOOT_ASMFILES:.s=.s.d))
+TRIABOOT_STAGE2_CFILES := $(shell find $(SRCDIR)/boot/$(TARGET)/stage2 -name *.c)
+TRIABOOT_STAGE2_ASMFILES := $(shell find $(SRCDIR)/boot/$(TARGET)/stage2 -name *.s)
+TRIABOOT_STAGE2_OBJ := $(patsubst $(SRCDIR)/boot/$(TARGET)/%, $(BUILDDIR)/boot/%, $(TRIABOOT_STAGE2_CFILES:.c=.c.o))
+TRIABOOT_STAGE2_ASMOBJ := $(patsubst $(SRCDIR)/boot/$(TARGET)/%, $(BUILDDIR)/boot/%, $(TRIABOOT_STAGE2_ASMFILES:.s=.s.o))
+TRIABOOT_STAGE2_DEPS := $(patsubst $(SRCDIR)/boot/$(TARGET)/%, $(BUILDDIR)/boot/%, $(TRIABOOT_STAGE2_CFILES:.c=.c.d))
+TRIABOOT_STAGE2_ASMDEPS := $(patsubst $(SRCDIR)/boot/$(TARGET)/%, $(BUILDDIR)/boot/%, $(TRIABOOT_STAGE2_ASMFILES:.s=.s.d))
+
+TRIABOOT_STAGE3_CFILES := $(shell find $(SRCDIR)/boot/$(TARGET)/stage3 -name *.c)
+TRIABOOT_STAGE3_ASMFILES := $(shell find $(SRCDIR)/boot/$(TARGET)/stage3 -name *.s)
+TRIABOOT_STAGE3_OBJ := $(patsubst $(SRCDIR)/boot/$(TARGET)/%, $(BUILDDIR)/boot/%, $(TRIABOOT_STAGE3_CFILES:.c=.c.o))
+TRIABOOT_STAGE3_ASMOBJ := $(patsubst $(SRCDIR)/boot/$(TARGET)/%, $(BUILDDIR)/boot/%, $(TRIABOOT_STAGE3_ASMFILES:.s=.s.o))
+TRIABOOT_STAGE3_DEPS := $(patsubst $(SRCDIR)/boot/$(TARGET)/%, $(BUILDDIR)/boot/%, $(TRIABOOT_STAGE3_CFILES:.c=.c.d))
+TRIABOOT_STAGE3_ASMDEPS := $(patsubst $(SRCDIR)/boot/$(TARGET)/%, $(BUILDDIR)/boot/%, $(TRIABOOT_STAGE3_ASMFILES:.s=.s.d))
 else ifeq ($(TARGET), m68k-mac)
 TRIABOOT_CFILES := $(shell find $(SRCDIR)/boot/$(TARGET) -name *.c)
 TRIABOOT_ASMFILES := $(shell find $(SRCDIR)/boot/$(TARGET) -name *.S)
@@ -124,32 +133,35 @@ triaboot: $(TRIABOOT) $(TRIABOOT_IMG)
 kernel: $(KERNEL)
 
 ifeq ($(TARGET), i386-pc)
-$(TRIABOOT_IMG): $(TRIABOOT_STAGE1) $(TRIABOOT)
+$(TRIABOOT_IMG): $(TRIABOOT_STAGE1) $(TRIABOOT_STAGE2) $(TRIABOOT_STAGE3) $(KERNEL)
 	@$(MKCWD)
 	@echo -e "[DD]\t\t$(@:$(BUILDDIR)/%=%)"
 	$(Q)dd if=/dev/zero of=$(TRIABOOT_IMG) bs=512 count=8192 $(DD_STATUS)
-	$(Q)dd if=$(TRIABOOT_STAGE1) of=$(TRIABOOT_IMG) bs=512 count=1 conv=notrunc $(DD_STATUS)
-	$(Q)dd if=$(TRIABOOT) of=$(TRIABOOT_IMG) bs=512 seek=8 conv=notrunc $(DD_STATUS)
+	$(Q)dd if=$(TRIABOOT_STAGE1) of=$(TRIABOOT_IMG) bs=512 count=1 seek=0 conv=notrunc $(DD_STATUS)
+	$(Q)dd if=$(TRIABOOT_STAGE2) of=$(TRIABOOT_IMG) bs=512 count=16 seek=8 conv=notrunc $(DD_STATUS)
 	@echo -e "[MTOOLS]\t$(@:$(BUILDDIR)/%=%)"
 	$(Q)mformat -i $(TRIABOOT_IMG) -c 1 -k -R 48 ::
-	$(Q)mcopy -i $(TRIABOOT_IMG) $(KERNEL) ::/
+	$(Q)mcopy -i $(TRIABOOT_IMG) $(TRIABOOT_STAGE3) ::/triaboot.s3
+	$(Q)mattrib -i $(TRIABOOT_IMG) +r +s +h ::/triaboot.s3
+	$(Q)mmd -i $(TRIABOOT_IMG) ::/TriaOS
+	$(Q)mcopy -i $(TRIABOOT_IMG) $(KERNEL) ::/TriaOS
 
 $(TRIABOOT_STAGE1): $(SRCDIR)/boot/$(TARGET)/stage1.s
 	@$(MKCWD)
 	@echo -e "[AS]\t\t$(@:$(BUILDDIR)/%=%)"
 	$(Q)$(AS) -fbin -MD -MP -I$(SRCDIR)/boot $< -o $@
 
-$(TRIABOOT): $(TRIABOOT_TRX)
+$(TRIABOOT_STAGE2): $(TRIABOOT_STAGE2_TRX)
 	@$(MKCWD)
 	@echo -e "[OBJCOPY]\t$(@:$(BUILDDIR)/%=%)"
 	$(Q)$(OBJCOPY) -Obinary $< $@
 
-$(TRIABOOT_TRX): $(TRIABOOT_OBJ) $(TRIABOOT_ASMOBJ) $(LIB)
+$(TRIABOOT_STAGE2_TRX): $(TRIABOOT_STAGE2_OBJ) $(TRIABOOT_STAGE2_ASMOBJ) $(LIB)
 	@$(MKCWD)
 	@echo -e "[LD]\t\t$(@:$(BUILDDIR)/%=%)"
-	$(Q)$(LD) $(TRIABOOT_OBJ) $(TRIABOOT_ASMOBJ) $(LDFLAGS) $(LDHARDFLAGS) -T$(SRCDIR)/boot/$(TARGET)/stage2/linker.ld -o $@
+	$(Q)$(LD) $(TRIABOOT_STAGE2_OBJ) $(TRIABOOT_STAGE2_ASMOBJ) $(LDFLAGS) $(LDHARDFLAGS) -T$(SRCDIR)/boot/$(TARGET)/stage2/linker.ld -o $@
 
--include $(TRIABOOT_DEPS) $(TRIABOOT_ASMDEPS)
+-include $(TRIABOOT_STAGE2_DEPS) $(TRIABOOT_STAGE2_ASMDEPS)
 
 $(BUILDDIR)/boot/stage2/%.c.o: $(SRCDIR)/boot/$(TARGET)/stage2/%.c
 	@$(MKCWD)
@@ -157,6 +169,28 @@ $(BUILDDIR)/boot/stage2/%.c.o: $(SRCDIR)/boot/$(TARGET)/stage2/%.c
 	$(Q)$(CC) $(CFLAGS) $(CHARDFLAGS) -c $< -o $@
 
 $(BUILDDIR)/boot/stage2/%.s.o: $(SRCDIR)/boot/$(TARGET)/stage2/%.s
+	@$(MKCWD)
+	@echo -e "[AS]\t\t$(<:$(SRCDIR)/%=%)"
+	$(Q)$(AS) $(ASHARDFLAGS) -I$(SRCDIR)/boot $< -o $@
+
+$(TRIABOOT_STAGE3): $(TRIABOOT_STAGE3_TRX)
+	@$(MKCWD)
+	@echo -e "[OBJCOPY]\t$(@:$(BUILDDIR)/%=%)"
+	$(Q)$(OBJCOPY) -Obinary $< $@
+
+$(TRIABOOT_STAGE3_TRX): $(TRIABOOT_STAGE3_OBJ) $(TRIABOOT_STAGE3_ASMOBJ) $(LIB)
+	@$(MKCWD)
+	@echo -e "[LD]\t\t$(@:$(BUILDDIR)/%=%)"
+	$(Q)$(LD) $(TRIABOOT_STAGE3_OBJ) $(TRIABOOT_STAGE3_ASMOBJ) $(LDFLAGS) $(LDHARDFLAGS) -T$(SRCDIR)/boot/$(TARGET)/stage3/linker.ld -o $@
+
+-include $(TRIABOOT_STAGE3_DEPS) $(TRIABOOT_STAGE3_ASMDEPS)
+
+$(BUILDDIR)/boot/stage3/%.c.o: $(SRCDIR)/boot/$(TARGET)/stage3/%.c
+	@$(MKCWD)
+	@echo -e "[CC]\t\t$(<:$(SRCDIR)/%=%)"
+	$(Q)$(CC) $(CFLAGS) $(CHARDFLAGS) -c $< -o $@
+
+$(BUILDDIR)/boot/stage3/%.s.o: $(SRCDIR)/boot/$(TARGET)/stage3/%.s
 	@$(MKCWD)
 	@echo -e "[AS]\t\t$(<:$(SRCDIR)/%=%)"
 	$(Q)$(AS) $(ASHARDFLAGS) -I$(SRCDIR)/boot $< -o $@

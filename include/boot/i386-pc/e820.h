@@ -1,7 +1,6 @@
 #ifndef BOOT__E820_H
 #define BOOT__E820_H
 
-#include <stdint.h>
 #include <boot/boot_info.h>
 
 #define E820_MAX_ENTRIES 256

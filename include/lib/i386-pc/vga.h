@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-typedef enum vga_color {
+typedef enum {
     VGA_COLOR_BLACK = 0,
     VGA_COLOR_BLUE = 1,
     VGA_COLOR_GREEN = 2,
@@ -22,14 +22,16 @@ typedef enum vga_color {
     VGA_COLOR_LIGHT_MAGENTA = 13,
     VGA_COLOR_LIGHT_BROWN = 14,
     VGA_COLOR_WHITE = 15,
-} vga_color_t;
+} TiVgaColor;
 
-#define vga_entry_color(fg, bg) ((vga_color_t)fg | (vga_color_t)bg << 4)
+#define vga_entry_color(fg, bg) ((TiVgaColor)fg | (TiVgaColor)bg << 4)
 #define vga_entry(c, color) ((char)c | (uint8_t)color << 8)
  
 void TiVgaInit(void);
 void TiVgaSetCursor(size_t offset);
 size_t TiVgaGetCursor(void);
+void VgaSetColor(TiVgaColor fg, TiVgaColor bg);
+void TiVgaWriteCharAt(char c, uint8_t color, size_t column, size_t row);
 void TiVgaWriteChar(char c);
 void TiVgaWrite(const char *string);
 int TiVgaPrintf(const char *format, ...);

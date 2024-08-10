@@ -33,7 +33,7 @@ static inline uint32_t TiIoInWord(uint16_t port) {
     return ret;
 }
 
-static inline void TiIoOutWait(void) {
+static inline void TiIoWait(void) {
     TiIoOutByte(0x80, 0);
 }
 

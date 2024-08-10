@@ -1,9 +1,9 @@
 #include <stdint.h>
 #include <lib/string.h>
-#include <lib/io.h>
-#include <lib/vga.h>
 #include <lib/nanoprintf_config.h>
 #include <lib/nanoprintf.h>
+#include <lib/i386-pc/vga.h>
+#include <lib/i386-pc/io.h>
  
 #define VGA_COLUMNS 80
 #define VGA_ROWS 25
@@ -23,7 +23,7 @@ void TiVgaSetCursor(size_t offset) {
 
 size_t TiVgaGetCursor(void) {
     TiIoOutByte(0x3D4, 14);
-    size_t offset = TiIoInByte(0x3d5) << 8;
+    size_t offset = TiIoInByte(0x3D5) << 8;
     TiIoOutByte(0x3D4, 15);
     offset += TiIoInByte(0x3D5);
     return offset;
@@ -35,11 +35,11 @@ void TiVgaInit(void) {
     vga_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 }
 
-void vga_set_color(uint8_t color) {
-    vga_color = color;
+void VgaSetColor(TiVgaColor fg, TiVgaColor bg) {
+    vga_color = vga_entry_color(fg, bg);
 }
 
-void TiVgaWriteChar_at(char c, uint8_t color, size_t column, size_t row) {
+void TiVgaWriteCharAt(char c, uint8_t color, size_t column, size_t row) {
     vga_buffer[row * VGA_COLUMNS + column] = vga_entry(c, color);
 }
 
@@ -56,7 +56,7 @@ void TiVgaWriteChar(char c) {
             vga_column += 4;
 
         default:
-            TiVgaWriteChar_at(c, vga_color, vga_column, vga_row);
+            TiVgaWriteCharAt(c, vga_color, vga_column, vga_row);
             vga_column++;
     }
 

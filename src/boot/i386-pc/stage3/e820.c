@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <lib/e9.h>
+#include <lib/i386-pc/e9.h>
 #include <boot/i386-pc/e820.h>
 #include <boot/i386-pc/real.h>
 
