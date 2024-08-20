@@ -1,5 +1,5 @@
 SECTIONS {
-    . = 0x7E00;
+    . = 0x8000;
 
     .entry : {
         *(.start*)

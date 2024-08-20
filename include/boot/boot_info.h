@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define TRIABOOT_MAGIC 0x761AB007
+
 typedef enum {
     MEMMAP_USABLE = 1,
     MEMMAP_RESERVED = 2,
@@ -13,8 +15,8 @@ typedef enum {
 } BeMemmapEntryType;
 
 typedef struct {
-    uint64_t base;
-    uint64_t length;
+    uint64_t address;
+    uint64_t size;
     BeMemmapEntryType type;
     uint32_t unused;
 } BeMemmapEntry;
@@ -48,8 +50,9 @@ typedef struct {
 
 typedef struct {
     uint32_t magic; // 0x761AB007 ("triaboot" spelled in hexadecimal)
+    char *command_line;
+    char *bootloader_name;
     BeMemmap memmap;
-    BeFramebuffer framebuffer;
 } BeBootInfo;
 
 #endif

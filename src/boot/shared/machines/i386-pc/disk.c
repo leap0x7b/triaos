@@ -6,7 +6,7 @@
 #include <lib/string.h>
 #include <lib/misc.h>
 #include <lib/i386-pc/e9.h>
-#include <lib/i386-pc/vga.h>
+#include <lib/i386-pc/console.h>
 
 #define BLOCK_SIZE_IN_SECTORS 16
 #define BLOCK_SIZE (sector_size * BLOCK_SIZE_IN_SECTORS)
@@ -19,13 +19,13 @@ static int cached_drive = -1;
 static uint8_t *cache = NULL;
 static uint64_t cached_block = CACHE_INVALID;
 
-typedef struct dap {
+struct dap {
     uint16_t size;
     uint16_t count;
     uint16_t offset;
     uint16_t segment;
     uint64_t lba;
-} dap_t;
+};
 
 static struct dap *dap = NULL;
 
@@ -34,7 +34,7 @@ static int cache_block(int drive, uint64_t block, int sector_size) {
         return 0;
 
     if (!dap) {
-        dap = BiAllocate(sizeof(dap_t));
+        dap = BiAllocate(sizeof(struct dap));
         dap->size = 16;
         dap->count = BLOCK_SIZE_IN_SECTORS;
     }
@@ -56,8 +56,8 @@ static int cache_block(int drive, uint64_t block, int sector_size) {
 
     if (regs.eflags & EFLAGS_CF) {
         int ah = (regs.eax >> 8) & 0xFF;
-        TiE9Printf("[triaboot-stage3] Disk read error: 0x%.4x (drive number %d)\n", ah, drive);
-        TiVgaPrintf("!%.4X", ah);
+        TiE9Printf("[triaboot-stage2] Disk read error: 0x%.4x (drive number %d)\n", ah, drive);
+        TiConsolePrintf("!%.4X", ah);
         while (1)
             __asm__ volatile ("hlt");
         __builtin_unreachable();
@@ -84,8 +84,8 @@ int BiDiskGetSectorSize(int drive) {
 
     if (regs.eflags & EFLAGS_CF) {
         int ah = (regs.eax >> 8) & 0xFF;
-        TiE9Printf("[triaboot-stage3] Disk read error: 0x%.4x (drive number %d)\n", ah, drive);
-        TiVgaPrintf("!%.4X", ah);
+        TiE9Printf("[triaboot-stage2] Disk read error: 0x%.4x (drive number %d)\n", ah, drive);
+        TiConsolePrintf("!%.4X", ah);
         while (1)
             __asm__ volatile ("hlt");
         __builtin_unreachable();

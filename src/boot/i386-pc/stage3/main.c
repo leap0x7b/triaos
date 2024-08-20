@@ -1,5 +1,5 @@
 #include <lib/printf.h>
-#include <lib/i386-pc/vga.h>
+#include <lib/i386-pc/console.h>
 #include <lib/i386-pc/e9.h>
 #include <boot/alloc.h>
 #include <boot/i386-pc/e820.h>
@@ -8,8 +8,8 @@
 
 void Main(void) {
     TiE9Write("[triaboot-stage3] Hello World!\n");
-    TiVgaInit();
-    TiVgaWrite("i");
+    TiConsoleInit();
+    TiConsoleWrite("i");
     TiE9Write("[triaboot-stage3] E820 memory map: ");
     BiE820Init();
     TiE9Write("OK\n");
@@ -30,7 +30,7 @@ void Main(void) {
         TiE9Printf("[triaboot-stage3] FATFS Error: %d\n", result);
     uint32_t readme_bytes_read;
     f_read(&readme_file, &readme, 1345, &readme_bytes_read);
-    TiVgaWrite(readme);
+    TiConsoleWrite(readme);
 
     while (1) {
         __asm__ ("hlt");

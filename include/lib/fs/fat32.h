@@ -6,6 +6,10 @@
 #define FAT32_LFN_MAX_ENTRIES 20
 #define FAT32_LFN_MAX_FILENAME_LENGTH (FAT32_LFN_MAX_ENTRIES * 13 + 1)
 
+#define FAT32_VALID_BOOT_SIGNATURE_1 0x28
+#define FAT32_VALID_BOOT_SIGNATURE_2 0x29
+#define FAT32_VALID_IDENTIFIER "FAT32   "
+
 #define FAT32_ATTRIBUTE_SUBDIRECTORY 0x10
 #define FAT32_LFN_ATTRIBUTE 0x0F
 #define FAT32_ATTRIBUTE_VOLLABEL 0x08
@@ -23,8 +27,8 @@ typedef struct {
     uint16_t sectors_per_fat;
     uint16_t sectors_per_track;
     uint16_t heads_count;
-    uint32_t hidden_sectors;
-    uint32_t large_sector_count;
+    uint32_t hidden_sectors_count;
+    uint32_t large_sectors_count;
     uint32_t sectors_per_fat32;
     uint16_t flags;
     uint16_t fat_version_number;
@@ -41,8 +45,7 @@ typedef struct {
 } __attribute__((packed)) TiFsFat32Bpb;
 
 typedef struct {
-    char filename[8];
-    char extension[3];
+    char filename[11]; // 8 (filename) + 3 (extension) = 11
     uint8_t attribute;
     uint8_t data1[8];
     uint16_t cluster_num_high;

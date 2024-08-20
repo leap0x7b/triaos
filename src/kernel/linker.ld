@@ -1,25 +1,37 @@
 SECTIONS {
-    . = 0x100000;
+    . = 0x200000;
 
     .text : {
+        *(.multiboot*)
         *(.text*)
     }
+
+    . += CONSTANT(MAXPAGESIZE);
 
     .rodata : {
         *(.rodata*)
     }
+
+    . += CONSTANT(MAXPAGESIZE);
 
     .data : {
         *(.data)
     }
 
     .bss : {
+        bss_start = .;
         *(COMMON)
-        *(.bss)
+        *(.bss*)
+        bss_end = .;
     }
 
     /DISCARD/ : {
-        *(.eh_frame);
-        *(.comment);
+        *(.eh_frame*);
+        *(.comment*);
+        *(.note*);
     }
+
+    stack_start = .;
+    . += 0x1000;
+    stack_end = .;
 }

@@ -18,7 +18,7 @@ bpb:
     .sectors_per_fat dw 0
     .sectors_per_track dw 0
     .head_count dw 0
-    .hidden_sectors dd 0
+    .hidden_sectors_count dd 0
     .large_sector_count dd 0
     ; FAT32 extended BPB
     .sectors_per_fat32 dd 0
@@ -69,7 +69,7 @@ entry:
     je error
 
     mov eax, [dap.lba]
-    add eax, [bpb.hidden_sectors]
+    add eax, [bpb.hidden_sectors_count]
     mov [dap.lba], eax
 
     mov ah, 0x42
@@ -207,7 +207,7 @@ dap:
     .size db 0x10
     .reserved db 0
     .sector_count dw 0x20
-    .address dd 0x7E00
+    .address dd 0x8000
     .lba dq 8
 
 gdt:
@@ -253,9 +253,9 @@ protected_mode_switch:
     bts ax, 0
     mov cr0, eax
 
-    jmp 0x18:0x7E00
+    jmp 0x18:0x8000
 
-times 505-($-$$) db 0
-dd 0x761AB007 ; triaboot signature to validate the vbr when its loaded by the bootsector
+times 507-($-$$) db 0
 drive_number db 0
+dw 0x761A
 dw 0xAA55
