@@ -5,10 +5,12 @@
 #include <stdbool.h>
 #include <boot/i386-pc/partition.h>
 
+typedef int (*BiFileReadFn)(void *, void *, uint64_t, uint64_t);
+
 typedef struct _FILE {
     bool is_memfile;
     void *fd;
-    int (*read)(void *fd, void *buf, uint64_t location, uint64_t count);
+    BiFileReadFn read;
     uint64_t size;
 } FILE;
 

@@ -1,40 +1,11 @@
-org 0x7c00
+org 0x7C00
 bits 16
 
 _start:
     jmp short entry
     nop
 
-; keep the bpb mostly empty because it would be overwritten anyway
-bpb:
-    .oem_name db 'triaOS  '
-    .bytes_per_sector dw 512
-    .sectors_per_cluster db 0
-    .reserved_sectors dw 0
-    .fats_count db 0
-    .root_dir_entries dw 0
-    .sectors_count dw 0
-    .media_descriptor db 0
-    .sectors_per_fat dw 0
-    .sectors_per_track dw 0
-    .head_count dw 0
-    .hidden_sectors_count dd 0
-    .large_sector_count dd 0
-    ; FAT32 extended BPB
-    .sectors_per_fat32 dd 0
-    .flags dw 0
-    .fat_version_number dw 0
-    .root_directory_cluster dd 0
-    .fsinfo_sector dw 0
-    .backup_boot_sector dw 0
-    .reserved0 times 12 db 0
-    ; FAT12/16 extended BPB
-    .drive_number db 0x80
-    .reserved1 db 0
-    .boot_signature db 0x29
-    .serial_number dd 0x00761A05 ; "triaOS" spelled in hexadecimal
-    .volume_label db 'triaOS 0.10'
-    .file_system db 'FAT32   '
+bpb: times 0x5A-($-$$) db 0
 
 entry:
     cli
@@ -46,39 +17,19 @@ entry:
     mov es, ax
     mov ss, ax
     mov sp, 0x7C00
-    mov [drive_number], dl
     sti
 
     mov al, 't'
     mov ah, 0x0E
     int 0x10
 
-    call check_a20
-    jnz enable_a20
+    mov eax, dword [stage2_sector]
+    mov ebx, 0x7E00
+    mov ecx, 1
+    call read_sectors
 
-    mov ah, 0x41
-    mov bx, 0x55AA
-    mov dl, [drive_number]
-    int 13h
     jc error
-
-    cmp ah, 0x80
-    je error
-
-    cmp ah, 0x86
-    je error
-
-    mov eax, [dap.lba]
-    add eax, [bpb.hidden_sectors_count]
-    mov [dap.lba], eax
-
-    mov ah, 0x42
-    mov dl, [drive_number]
-    mov si, dap
-    int 13h
-
-    jnc protected_mode_switch
-    jmp error
+    jmp 0x7E00
 
 print:
     mov ah, 0x0E
@@ -135,6 +86,157 @@ error:
 .halt:
     hlt
     jmp $
+
+read_sector:
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+
+    push es
+    pop word [dap.segment]
+    mov word [dap.offset], bx
+    mov dword [dap.lba_low], eax
+
+    xor esi, esi
+    mov si, dap
+    mov ah, 0x42
+
+    clc
+    int 0x13
+
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+
+dap:
+    .size db 0x10
+    .reserved db 0
+    .sector_count dw 1
+    .offset dw 0
+    .segment dw 0
+    .lba_low dd 0
+    .lba_high dd 0
+
+%define READ_BUFFER 0x7000
+%define BYTES_PER_SECTOR 512
+
+read_sectors:
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+.loop:
+    push es
+    push ebx
+
+    mov bx, READ_BUFFER
+    mov es, bx
+    xor bx, bx
+
+    call read_sector
+
+    pop ebx
+    pop es
+
+    jc .done
+
+    push ds
+
+    mov si, READ_BUFFER
+    mov ds, si
+    mov edi, ebx
+    xor esi, esi
+
+    push ecx
+    mov ecx, BYTES_PER_SECTOR
+    a32 o32 rep movsb
+    pop ecx
+
+    pop ds
+
+    inc eax
+    add ebx, BYTES_PER_SECTOR
+
+    loop .loop
+.done:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+
+times 0x1B0-($-$$) db 0
+stage2_sector: dd 1
+
+times 0x1B8-($-$$) db 0
+times 510-($-$$) db 0
+dw 0xaa55
+
+stage2:
+    call check_a20
+    jnz enable_a20
+
+    mov eax, dword [stage2_sector]
+    inc eax
+    mov ebx, 0x8000
+    mov ecx, 63
+    call read_sectors
+    jc error
+
+    cli
+    lgdt [gdt.descriptor]
+
+    mov eax, cr0
+    bts ax, 0
+    mov cr0, eax
+
+    jmp 0x18:0x8000
+
+gdt:
+    dq 0
+.code16:
+    dw 0xFFFF
+    dw 0
+    db 0
+    db 10011010b
+    db 1
+    db 0
+.data16:
+    dw 0xFFFF
+    dw 0
+    db 0
+    db 10010010b
+    db 1
+    db 0
+.code32:
+    dw 0xFFFF
+    dw 0
+    db 0
+    db 10011010b
+    db 11001111b
+    db 0
+.data32:
+    dw 0xFFFF
+    dw 0
+    db 0
+    db 10010010b
+    db 11001111b
+    db 0
+.end:
+.descriptor:
+    dw (.end - gdt) - 1
+    dd gdt
 
 check_a20:
     push es
@@ -203,59 +305,6 @@ enable_a20:
     jz .kbd_wait2
     ret
 
-dap:
-    .size db 0x10
-    .reserved db 0
-    .sector_count dw 0x20
-    .address dd 0x8000
-    .lba dq 8
-
-gdt:
-    dq 0
-.code16:
-    dw 0xFFFF
-    dw 0
-    db 0
-    db 10011010b
-    db 1
-    db 0
-.data16:
-    dw 0xFFFF
-    dw 0
-    db 0
-    db 10010010b
-    db 1
-    db 0
-.code32:
-    dw 0xFFFF
-    dw 0
-    db 0
-    db 10011010b
-    db 11001111b
-    db 0
-.data32:
-    dw 0xFFFF
-    dw 0
-    db 0
-    db 10010010b
-    db 11001111b
-    db 0
-.end:
-.descriptor:
-    dw (.end - gdt) - 1
-    dd gdt
-
-protected_mode_switch:
-    cli
-    lgdt [gdt.descriptor]
-
-    mov eax, cr0
-    bts ax, 0
-    mov cr0, eax
-
-    jmp 0x18:0x8000
-
-times 507-($-$$) db 0
-drive_number db 0
-dw 0x761A
-dw 0xAA55
+times 1024-($-$$) db 0
+incbin "triaboot.s2"
+times 32768-($-$$) db 0

@@ -11,7 +11,7 @@ int fopen(FILE *ret, BiPartition *partition, const char *filename) {
         BiFsFat32FileHandle *fd = BiFsFat32Open(partition, filename);
 
         ret->fd = (void *)fd;
-        ret->read = (void *)BiFsFat32Read;
+        ret->read = (BiFileReadFn)BiFsFat32Read;
         ret->size = fd->size;
 
         return 0;

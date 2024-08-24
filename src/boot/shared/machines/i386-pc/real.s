@@ -1,6 +1,8 @@
 ; Adapted from Limine (https://github.com/limine-bootloader/limine/blob/trunk/common/lib/real.s2.asm_bios_ia32)
 ; Originally licensed under BSD-2-Clause
 
+section .real
+
 global BiRealInterrupt
 BiRealInterrupt:
     mov al, byte [esp + 4]
@@ -20,7 +22,6 @@ BiRealInterrupt:
     push ebp
 
     jmp 0x08:.bits16
-
 bits 16
 .bits16:
     mov ax, 0x10
@@ -33,7 +34,6 @@ bits 16
     and al, 0xFE
     mov cr0, eax
     jmp 0:.cs_zero
-
 .cs_zero:
     xor ax, ax
     mov ss, ax
@@ -56,9 +56,7 @@ bits 16
 
     sti
     db 0xcd
-
 .int_num: db 0
-
     cli
 
     mov dword [ss:.esp], esp
@@ -84,7 +82,6 @@ bits 16
     or al, 1
     mov cr0, eax
     jmp 0x18:.bits32
-
 bits 32
 .bits32:
     mov ax, 0x20

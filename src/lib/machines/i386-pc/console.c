@@ -4,6 +4,7 @@
 #include <lib/nanoprintf.h>
 #include <lib/i386-pc/console.h>
 #include <lib/i386-pc/io.h>
+#include <lib/i386-pc/vga.h>
  
 #define CONSOLE_COLUMNS 80
 #define CONSOLE_ROWS 25
@@ -49,6 +50,60 @@ uint16_t TiConsoleGetCursor(void) {
     offset |= (uint16_t)(TiIoInByte(0x3D5)) << 8;
 
     return offset;
+}
+
+void TiConsoleSetFont(const uint8_t *buf) {
+    volatile uint8_t *mem = (volatile uint8_t *)0xA0000;
+
+    // Clear even/odd mode
+    TiIoOutShort(VGA_GC_INDEX, 5);
+    // Map VGA memory to 0xA0000
+    TiIoOutShort(VGA_GC_INDEX, 0x406);
+    // Set bitplane 2
+    TiIoOutShort(VGA_SEQ_INDEX, 0x402);
+    // Clear even/odd mode (the other way)
+    TiIoOutShort(VGA_SEQ_INDEX, 0x604);
+
+    // Copy charmap
+    for (int i = 0; i < 256; ++i) {
+        for (int j = 0; j < 16; ++j) {
+            *mem++ = *buf++;
+        }
+        mem += 16; // Skip the next 16 bytes in VGA memory
+    }
+
+    // Restore VGA state to normal operation
+    TiIoOutShort(VGA_SEQ_INDEX, 0x302);
+    TiIoOutShort(VGA_SEQ_INDEX, 0x204);
+    TiIoOutShort(VGA_GC_INDEX, 0x1005);
+    TiIoOutShort(VGA_GC_INDEX, 0xE00);
+}
+
+void TiConsoleGetFont(uint8_t *buf) {
+    volatile uint8_t *mem = (volatile uint8_t *)0xA0000;
+
+    // Clear even/odd mode
+    TiIoOutShort(VGA_GC_INDEX, 5);
+    // Map VGA memory to 0xA0000
+    TiIoOutShort(VGA_GC_INDEX, 0x406);
+    // Set bitplane 2
+    TiIoOutShort(VGA_SEQ_INDEX, 0x402);
+    // Clear even/odd mode (the other way)
+    TiIoOutShort(VGA_SEQ_INDEX, 0x604);
+
+    // Copy charmap
+    for (int i = 0; i < 256; ++i) {
+        for (int j = 0; j < 16; ++j) {
+            *buf++ = *mem++;
+        }
+        mem += 16; // Skip the next 16 bytes in VGA memory
+    }
+
+    // Restore VGA state to normal operation
+    TiIoOutShort(VGA_SEQ_INDEX, 0x302);
+    TiIoOutShort(VGA_SEQ_INDEX, 0x204);
+    TiIoOutShort(VGA_GC_INDEX, 0x1005);
+    TiIoOutShort(VGA_GC_INDEX, 0xE00);
 }
 
 void TiConsoleSetColor(TiConsoleColor fg, TiConsoleColor bg) {

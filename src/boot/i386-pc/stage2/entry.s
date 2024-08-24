@@ -14,6 +14,9 @@ _start:
     mov ss, ax
     mov esp, stack_end
 
+    xor dh, dh
+    push edx
+
     xor al, al
     mov edi, bss_start
     mov ecx, bss_end
