@@ -1,0 +1,4 @@
+[submodule "external/cc-runtime"]
+	path = external/cc-runtime
+	url = https://github.com/osdev0/cc-runtime
+	branch = trunk
