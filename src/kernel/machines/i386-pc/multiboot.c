@@ -1,4 +1,4 @@
-#include <lib/i386-pc/console.h>
+#include <lib/console.h>
 #include <boot/boot_info.h>
 #include <boot/multiboot.h>
 #include <boot/i386-pc/e820.h>

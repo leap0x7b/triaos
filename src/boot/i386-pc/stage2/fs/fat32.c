@@ -263,12 +263,12 @@ static int open_in(BiFsFat32Context *context, TiFsFat32DirectoryEntry *directory
         if (directory_entries[i].attribute == FAT32_LFN_ATTRIBUTE) {
             TiFsFat32LfnEntry* lfn = (TiFsFat32LfnEntry*) &directory_entries[i];
 
-            if (lfn->sequence_number & 0b01000000) {
+            if (lfn->sequence_number & 0x40) {
                 // this lfn is the first entry in the table, clear the lfn buffer
                 memset(current_lfn, ' ', sizeof(current_lfn));
             }
 
-            const unsigned int lfn_index = ((lfn->sequence_number & 0b00011111) - 1U) * 13U;
+            const uint32_t lfn_index = ((lfn->sequence_number & 0x1f) - 1U) * 13U;
             if (lfn_index >= FAT32_LFN_MAX_ENTRIES * 13) {
                 continue;
             }
@@ -315,7 +315,7 @@ static int open_in(BiFsFat32Context *context, TiFsFat32DirectoryEntry *directory
     ret = -1;
 
 out:
-    //pmm_free(directory_entries, dir_chain_len * block_size);
+    //BiFree(directory_entries, dir_chain_len * block_size);
     return ret;
 }
 

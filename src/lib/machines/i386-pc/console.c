@@ -2,7 +2,7 @@
 #include <lib/string.h>
 #include <lib/nanoprintf_config.h>
 #include <lib/nanoprintf.h>
-#include <lib/i386-pc/console.h>
+#include <lib/console.h>
 #include <lib/i386-pc/io.h>
 #include <lib/i386-pc/vga.h>
  

@@ -1,12 +1,12 @@
 #include <stdint.h>
 #include <stddef.h>
-#include <boot/i386-pc/disk.h>
-#include <boot/i386-pc/real.h>
-#include <boot/alloc.h>
 #include <lib/string.h>
 #include <lib/misc.h>
+#include <lib/console.h>
 #include <lib/i386-pc/e9.h>
-#include <lib/i386-pc/console.h>
+#include <boot/alloc.h>
+#include <boot/i386-pc/disk.h>
+#include <boot/i386-pc/real.h>
 
 #define BLOCK_SIZE_IN_SECTORS 16
 #define BLOCK_SIZE (sector_size * BLOCK_SIZE_IN_SECTORS)

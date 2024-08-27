@@ -1,4 +1,4 @@
-#include <lib/i386-pc/console.h>
+#include <lib/console.h>
 #include <lib/i386-pc/e9.h>
 #include <boot/file.h>
 #include <boot/i386-pc/disk.h>
@@ -7,7 +7,7 @@
 #include <boot/fs/fat32.h>
 
 void Main(int boot_drive) {
-    TiE9Write("TriaBoot 0.10\n");
+    TiE9Write("triaBoot 0.10\n");
     TiConsoleInit();
     TiConsoleWriteChar('r');
 

@@ -21,6 +21,6 @@ See the [license](LICENSE) for more information.
 ## Contributions
 Anyone is welcome to contribute to this project. 
 
-Please try to adhere to the C99 standard and guidelines and avoid usage of non-C99 code or GNU extensions. Use the **Issues** or the **Discussions** tab to submit bugs or feature requests, or submit improved code as **Pull requests**.
+Please try to adhere to the C99 standard and guidelines and avoid usage of either non-C99 code or GNU extensions. Use the **Issues** or the **Discussions** tab to submit bugs or feature requests, or submit improved code as **Pull requests**.
 
 Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.

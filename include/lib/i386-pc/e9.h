@@ -1,5 +1,5 @@
-#ifndef LIB__E9_H
-#define LIB__E9_H
+#ifndef LIB__I386_PC__E9_H
+#define LIB__I386_PC__E9_H
 
 #include <stdarg.h>
 

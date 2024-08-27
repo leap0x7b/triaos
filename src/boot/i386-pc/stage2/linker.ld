@@ -33,8 +33,4 @@ SECTIONS {
         *(.comment*);
         *(.note*);
     }
-
-    stack_start = .;
-    . += 0x8000;
-    stack_end = .;
 }

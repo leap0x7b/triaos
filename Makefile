@@ -29,7 +29,7 @@ LD = ld.lld
 OBJCOPY = llvm-objcopy
 QEMU = qemu-system-i386
 
-CFLAGS ?= -Og -gdwarf
+CFLAGS ?= -Os -gdwarf
 ASFLAGS ?= -g -Fdwarf
 LDFLAGS ?=
 QEMUFLAGS ?= -no-reboot -no-shutdown
@@ -93,6 +93,8 @@ TRIABOOT_STAGE2_ASMOBJ := $(patsubst $(SRCDIR)/boot/$(TARGET)/%, $(BUILDDIR)/boo
 TRIABOOT_STAGE2_DEPS := $(patsubst $(SRCDIR)/boot/$(TARGET)/%, $(BUILDDIR)/boot/%, $(TRIABOOT_STAGE2_CFILES:.c=.c.d))
 TRIABOOT_STAGE2_ASMDEPS := $(patsubst $(SRCDIR)/boot/$(TARGET)/%, $(BUILDDIR)/boot/%, $(TRIABOOT_STAGE2_ASMFILES:.s=.s.d))
 else ifeq ($(TARGET), m68k-mac)
+TRIABOOT := $(BUILDDIR)/triaboot.bin
+
 TRIABOOT_CFILES := $(shell find $(SRCDIR)/boot/$(TARGET) -name *.c)
 TRIABOOT_ASMFILES := $(shell find $(SRCDIR)/boot/$(TARGET) -name *.S)
 TRIABOOT_OBJ := $(patsubst $(SRCDIR)/boot/$(TARGET)/%, $(BUILDDIR)/boot/%, $(TRIABOOT_CFILES:.c=.c.o))
@@ -103,19 +105,19 @@ else
 $(error Invalid target: $(TARGET))
 endif
 
-TRIABOOT_SHARED_CFILES := $(shell find $(SRCDIR)/boot/shared -not \( -path $(SRCDIR)/boot/shared/machines -prune \) -name *.c) $(shell find $(SRCDIR)/boot/shared/machines/$(TARGET) -name *.c)
-TRIABOOT_SHARED_ASMFILES := $(shell find $(SRCDIR)/boot/shared -not \( -path $(SRCDIR)/boot/shared/machines -prune \) -name *.s) $(shell find $(SRCDIR)/boot/shared/machines/$(TARGET) -name *.s)
-TRIABOOT_SHARED_OBJ := $(patsubst $(BUILDDIR)/boot/shared/machines/$(TARGET)/%, $(BUILDDIR)/boot/shared/%, $(patsubst $(SRCDIR)/boot/shared/%, $(BUILDDIR)/boot/shared/%, $(TRIABOOT_SHARED_CFILES:.c=.c.o)))
-TRIABOOT_SHARED_ASMOBJ := $(patsubst $(BUILDDIR)/boot/shared/machines/$(TARGET)/%, $(BUILDDIR)/boot/shared/%, $(patsubst $(SRCDIR)/boot/shared/%, $(BUILDDIR)/boot/shared/%, $(TRIABOOT_SHARED_ASMFILES:.s=.s.o)))
-TRIABOOT_SHARED_DEPS := $(patsubst $(BUILDDIR)/boot/shared/machines/$(TARGET)/%, $(BUILDDIR)/boot/shared/%, $(patsubst $(SRCDIR)/boot/shared/%, $(BUILDDIR)/boot/shared/%, $(TRIABOOT_SHARED_CFILES:.c=.c.d)))
-TRIABOOT_SHARED_ASMDEPS := $(patsubst $(BUILDDIR)/boot/shared/machines/$(TARGET)/%, $(BUILDDIR)/boot/shared/%, $(patsubst $(SRCDIR)/boot/shared/%, $(BUILDDIR)/boot/shared/%, $(TRIABOOT_SHARED_ASMFILES:.s=.s.d)))
+TRIABOOT_SHARED_CFILES := $(shell find $(SRCDIR)/boot/shared -name *.c)
+TRIABOOT_SHARED_ASMFILES := $(shell find $(SRCDIR)/boot/shared -name *.s)
+TRIABOOT_SHARED_OBJ := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(TRIABOOT_SHARED_CFILES:.c=.c.o))
+TRIABOOT_SHARED_ASMOBJ := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(TRIABOOT_SHARED_ASMFILES:.s=.s.o))
+TRIABOOT_SHARED_DEPS := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(TRIABOOT_SHARED_CFILES:.c=.c.d))
+TRIABOOT_SHARED_ASMDEPS := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(TRIABOOT_SHARED_ASMFILES:.s=.s.d))
 
-KERNEL_CFILES := $(shell find $(SRCDIR)/kernel -name *.c)
-KERNEL_ASMFILES := $(shell find $(SRCDIR)/kernel -name *.s)
-KERNEL_OBJ := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(KERNEL_CFILES:.c=.c.o))
-KERNEL_ASMOBJ := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(KERNEL_ASMFILES:.s=.s.o))
-KERNEL_DEPS := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(KERNEL_CFILES:.c=.c.d))
-KERNEL_ASMDEPS := $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(KERNEL_ASMFILES:.s=.s.d))
+KERNEL_CFILES := $(shell find $(SRCDIR)/kernel -not \( -path $(SRCDIR)/kernel/machines -prune \) -name *.c) $(shell find $(SRCDIR)/kernel/machines/$(TARGET) -name *.c)
+KERNEL_ASMFILES := $(shell find $(SRCDIR)/kernel -not \( -path $(SRCDIR)/kernel/machines -prune \) -name *.s) $(shell find $(SRCDIR)/kernel/machines/$(TARGET) -name *.s)
+KERNEL_OBJ := $(patsubst $(BUILDDIR)/kernel/machines/$(TARGET)/%, $(BUILDDIR)/kernel/%, $(patsubst $(SRCDIR)/kernel/%, $(BUILDDIR)/kernel/%, $(KERNEL_CFILES:.c=.c.o)))
+KERNEL_ASMOBJ := $(patsubst $(BUILDDIR)/kernel/machines/$(TARGET)/%, $(BUILDDIR)/kernel/%, $(patsubst $(SRCDIR)/kernel/%, $(BUILDDIR)/kernel/%, $(KERNEL_ASMFILES:.s=.s.o)))
+KERNEL_DEPS := $(patsubst $(BUILDDIR)/kernel/machines/$(TARGET)/%, $(BUILDDIR)/kernel/%, $(patsubst $(SRCDIR)/kernel/%, $(BUILDDIR)/kernel/%, $(KERNEL_CFILES:.c=.c.d)))
+KERNEL_ASMDEPS := $(patsubst $(BUILDDIR)/kernel/machines/$(TARGET)/%, $(BUILDDIR)/kernel/%, $(patsubst $(SRCDIR)/kernel/%, $(BUILDDIR)/kernel/%, $(KERNEL_ASMFILES:.s=.s.d)))
 
 LIB_CFILES := $(shell find $(SRCDIR)/lib -not \( -path $(SRCDIR)/lib/machines -prune \) -name *.c) $(shell find $(SRCDIR)/lib/machines/$(TARGET) -name *.c)
 LIB_ASMFILES := $(shell find $(SRCDIR)/lib -not \( -path $(SRCDIR)/lib/machines -prune \) -name *.s) $(shell find $(SRCDIR)/lib/machines/$(TARGET) -name *.s)
@@ -142,7 +144,7 @@ $(TRIAOS_IMG): $(TRIABOOT) $(KERNEL)
 	@echo -e "[PARTED]\t$(@:$(BUILDDIR)/%=%)"
 	$(Q)parted -s $(TRIAOS_IMG) mklabel msdos
 	$(Q)parted -s $(TRIAOS_IMG) mkpart primary 2048s 6143s
-	$(Q)parted -s $(TRIAOS_IMG) mkpart primary fat32 6144s 131038s
+	$(Q)parted -s $(TRIAOS_IMG) mkpart primary 6144s 131038s
 	@echo -e "[LOSETUP]\t$(@:$(BUILDDIR)/%=%)"
 	$(Q)sudo losetup -Pf --show $(TRIAOS_IMG) > $(LOOPBACK)
 	@echo -e "[MKFS]\t\t`cat $(LOOPBACK)`p2"
@@ -233,16 +235,6 @@ $(BUILDDIR)/boot/shared/%.s.o: $(SRCDIR)/boot/shared/%.s
 	@echo -e "[AS]\t\t$(<:$(SRCDIR)/%=%)"
 	$(Q)$(AS) $(ASHARDFLAGS) -I$(SRCDIR)/boot/shared $< -o $@
 
-$(BUILDDIR)/boot/shared/%.c.o: $(SRCDIR)/boot/shared/machines/$(TARGET)/%.c
-	@$(MKCWD)
-	@echo -e "[CC]\t\t$(<:$(SRCDIR)/%=%)"
-	$(Q)$(CC) $(CFLAGS) $(CHARDFLAGS) -c $< -o $@
-
-$(BUILDDIR)/boot/shared/%.s.o: $(SRCDIR)/boot/shared/machines/$(TARGET)/%.s
-	@$(MKCWD)
-	@echo -e "[AS]\t\t$(<:$(SRCDIR)/%=%)"
-	$(Q)$(AS) $(ASHARDFLAGS) -I$(SRCDIR)/boot/shared $< -o $@
-
 $(LIB): $(LIB_OBJ) $(LIB_ASMOBJ)
 	@$(MKCWD)
 	@echo -e "[AR]\t\t$(@:$(BUILDDIR)/%=%)"
@@ -273,7 +265,7 @@ $(BUILDDIR)/lib/%.s.o: $(SRCDIR)/lib/machines/$(TARGET)/%.s
 $(KERNEL): $(CC_RUNTIME_OBJ) $(KERNEL_OBJ) $(KERNEL_ASMOBJ) $(LIB)
 	@$(MKCWD)
 	@echo -e "[LD]\t\t$(@:$(BUILDDIR)/%=%)"
-	$(Q)$(LD) $(CC_RUNTIME_OBJ) $(KERNEL_OBJ) $(KERNEL_ASMOBJ) $(LDFLAGS) $(LDHARDFLAGS) -T$(SRCDIR)/kernel/linker.ld -o $@
+	$(Q)$(LD) $(CC_RUNTIME_OBJ) $(KERNEL_OBJ) $(KERNEL_ASMOBJ) $(LDFLAGS) $(LDHARDFLAGS) -T$(SRCDIR)/kernel/machines/$(TARGET)/linker.ld -o $@
 
 -include $(KERNEL_DEPS) $(KERNEL_ASMDEPS)
 
@@ -283,6 +275,16 @@ $(BUILDDIR)/kernel/%.c.o: $(SRCDIR)/kernel/%.c
 	$(Q)$(CC) $(CFLAGS) $(CHARDFLAGS) -c $< -o $@
 
 $(BUILDDIR)/kernel/%.s.o: $(SRCDIR)/kernel/%.s
+	@$(MKCWD)
+	@echo -e "[AS]\t\t$(<:$(SRCDIR)/%=%)"
+	$(Q)$(AS) $(ASHARDFLAGS) -I$(SRCDIR)/kernel $< -o $@
+
+$(BUILDDIR)/kernel/%.c.o: $(SRCDIR)/kernel/machines/$(TARGET)/%.c
+	@$(MKCWD)
+	@echo -e "[CC]\t\t$(<:$(SRCDIR)/%=%)"
+	$(Q)$(CC) $(CFLAGS) $(CHARDFLAGS) -c $< -o $@
+
+$(BUILDDIR)/kernel/%.s.o: $(SRCDIR)/kernel/machines/$(TARGET)/%.s
 	@$(MKCWD)
 	@echo -e "[AS]\t\t$(<:$(SRCDIR)/%=%)"
 	$(Q)$(AS) $(ASHARDFLAGS) -I$(SRCDIR)/kernel $< -o $@
@@ -297,7 +299,10 @@ $(BUILDDIR)/cc-runtime/%.c.o: $(EXTERNALDIR)/cc-runtime/%.c
 run: all
 	@echo -e "[QEMU]\t\t$(TRIAOS_IMG:$(BUILDDIR)/%=%)"
 	$(Q)$(QEMU) -m $(QEMUMEMSIZE) $(QEMUFLAGS) $(QEMUHARDFLAGS) -hda $(TRIAOS_IMG)
-	@#$(Q)$(QEMU) -m $(QEMUMEMSIZE) $(QEMUFLAGS) $(QEMUHARDFLAGS) -kernel $(KERNEL)
+
+run-multiboot: kernel
+	@echo -e "[QEMU]\t\t$(KERNEL:$(BUILDDIR)/%=%)"
+	$(Q)$(QEMU) -m $(QEMUMEMSIZE) $(QEMUFLAGS) $(QEMUHARDFLAGS) -kernel $(KERNEL)
 
 clean:
 	$(Q)$(RM)r $(BUILDDIR)

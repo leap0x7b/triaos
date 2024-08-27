@@ -29,7 +29,7 @@ void TiConsoleSetCursor(size_t x, size_t y);
 uint16_t TiConsoleGetCursor(void);
 void TiConsoleSetFont(const uint8_t *buf);
 void TiConsoleGetFont(uint8_t *buf);
-void ConsoleSetColor(TiConsoleColor fg, TiConsoleColor bg);
+void TiConsoleSetColor(TiConsoleColor fg, TiConsoleColor bg);
 void TiConsoleClear(void);
 void TiConsoleWriteCharAt(char c, uint8_t color, size_t column, size_t row);
 void TiConsoleWriteChar(char c);

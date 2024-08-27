@@ -1,6 +1,5 @@
 extern bss_start
 extern bss_end
-extern stack_end
 extern Main
 global _start
 
@@ -12,7 +11,6 @@ _start:
     mov fs, ax
     mov gs, ax
     mov ss, ax
-    mov esp, stack_end
 
     xor dh, dh
     push edx
