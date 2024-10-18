@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <boot/i386-pc/partition.h>
+#include <boot/arch/i386/machines/pc/partition.h>
 
 typedef int (*BiFileReadFn)(void *, void *, uint64_t, uint64_t);
 

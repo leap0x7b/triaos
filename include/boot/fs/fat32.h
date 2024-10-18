@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <boot/i386-pc/partition.h>
+#include <boot/arch/i386/machines/pc/partition.h>
 
 typedef struct {
     BiPartition *partition;
